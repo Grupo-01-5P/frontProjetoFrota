@@ -57,7 +57,9 @@ flutter:
 
   assets:
     - lib/assets/images/backgroundHome.png
-    - lib/assets/images/_2009906610368.svg
+    - lib/assets/images/iconInoperantes.png
+    - lib/assets/images/iconManutencoes.png
+    - lib/assets/images/iconTerceirize.png
 
   #   - images/a_dot_ham.jpeg
 

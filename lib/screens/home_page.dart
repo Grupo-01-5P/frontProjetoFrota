@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:front_projeto_flutter/screens/inoperative.dart';
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});
@@ -45,8 +46,12 @@ class HomePage extends StatelessWidget {
               icon: Icons.warning,
               text: 'Veículos inoperantes',
               onTap: () {
-                // Ação para Veículos inoperantes
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => Inoperative()),
+                );
               },
+
             ),
             _buildDrawerItem(
               icon: Icons.bar_chart,
