@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:front_projeto_flutter/screens/budgets/budgets_page.dart';
+import 'package:front_projeto_flutter/screens/budgets/budgets_listage.dart';
 
-class HomePage extends StatelessWidget {
-  HomePage({super.key});
+class BudgetsPage extends StatelessWidget {
+  BudgetsPage({super.key});
 
   // Criação de uma GlobalKey para controlar o Scaffold
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -32,9 +32,7 @@ class HomePage extends StatelessWidget {
               icon: Icons.request_quote,
               text: 'Orçamentos',
               onTap: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (context) => BudgetsPage()));
+                //Navigator.of(context).push(RegisterScreen());
               },
             ),
             _buildDrawerItem(
@@ -90,16 +88,9 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
+
       body: Stack(
         children: [
-          // Background da tela
-          Positioned.fill(
-            child: Image.asset(
-              'lib/assets/images/backgroundHome.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-
           // Botões no topo
           SafeArea(
             child: Padding(
@@ -151,28 +142,82 @@ class HomePage extends StatelessWidget {
               ),
             ),
           ),
-
-          // Conteúdo principal
-          SafeArea(
+          // Botões logo abaixo do cabeçalho
+          Padding(
+            padding: EdgeInsets.only(
+              top: kToolbarHeight + 32, // altura do appBar + espaço extra
+              left: 16,
+              right: 16,
+            ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 15), // Reduzido o espaço acima dos cards
-                // Cards com input de placa
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.20,
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BudgetsListage(),
+                        ),
+                      );
+                    },
                     child: Column(
-                      mainAxisAlignment:
-                          MainAxisAlignment
-                              .end, // Move os cards para perto da barra inferior
-                      children: const [
-                        _PlacaCard(titulo: "Aprovar solicitação"),
-                        SizedBox(height: 12),
-                        _PlacaCard(titulo: "Visualizar manutenção do veículo"),
-                        SizedBox(height: 12),
-                        _PlacaCard(titulo: "Deslocamento de veículo"),
-                        SizedBox(height: 12),
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Orçamentos',
+                          style: TextStyle(fontSize: 24),
+                        ),
+                        const SizedBox(height: 8),
+                        SvgPicture.asset(
+                          'lib/assets/images/_2009906610368.svg',
+                          width: 24,
+                          height: 24,
+                          color: Colors.green,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16), // Espaço entre os botões
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.20,
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BudgetsListage(),
+                        ),
+                      );
+                    },
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Histórico de orçamentos',
+                          style: TextStyle(fontSize: 24),
+                        ),
+                        const SizedBox(height: 8),
+                        SvgPicture.asset(
+                          'lib/assets/images/_2009906610368.svg',
+                          width: 24,
+                          height: 24,
+                          color: Colors.green,
+                        ),
                       ],
                     ),
                   ),
@@ -219,41 +264,6 @@ class HomePage extends StatelessWidget {
       leading: Icon(icon, color: iconColor),
       title: Text(text),
       onTap: onTap,
-    );
-  }
-}
-
-class _PlacaCard extends StatelessWidget {
-  final String titulo;
-
-  const _PlacaCard({required this.titulo});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(titulo, style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            const TextField(
-              decoration: InputDecoration(
-                hintText: 'Digite a placa do veículo',
-                filled: true,
-                fillColor: Color(0xFFF1F1F1),
-                border: OutlineInputBorder(
-                  borderSide: BorderSide.none,
-                  borderRadius: BorderRadius.all(Radius.circular(8)),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
