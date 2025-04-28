@@ -58,7 +58,8 @@ flutter:
   assets:
     - lib/assets/images/backgroundHome.png
     - lib/assets/images/_2009906610368.svg
-    - lib/assets/images/pneu.png
+    - lib/assets/images/tire.png
+    - lib/assets/images/Vector.png
 
   #   - images/a_dot_ham.jpeg
 

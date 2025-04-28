@@ -32,7 +32,9 @@ class BudgetsPage extends StatelessWidget {
               icon: Icons.request_quote,
               text: 'Orçamentos',
               onTap: () {
-                //Navigator.of(context).push(RegisterScreen());
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (context) => BudgetsPage()));
               },
             ),
             _buildDrawerItem(

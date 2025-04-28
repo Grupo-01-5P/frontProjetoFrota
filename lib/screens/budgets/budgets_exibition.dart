@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:front_projeto_flutter/screens/budgets/budgets_page.dart';
 
-class BudgetsPage extends StatelessWidget {
-  BudgetsPage({super.key});
+class BudgetsExibition extends StatelessWidget {
+  BudgetsExibition({super.key});
 
   // Criação de uma GlobalKey para controlar o Scaffold
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -31,7 +32,9 @@ class BudgetsPage extends StatelessWidget {
               icon: Icons.request_quote,
               text: 'Orçamentos',
               onTap: () {
-                //Navigator.of(context).push(RegisterScreen());
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (context) => BudgetsPage()));
               },
             ),
             _buildDrawerItem(
@@ -89,16 +92,6 @@ class BudgetsPage extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          // Background da tela
-          Center(
-            child: Image.asset(
-              'lib/assets/images/pneu.png',
-              width: 800, 
-              height: 800,
-              fit: BoxFit.none, // Não redimensiona a imagem
-            ),
-          ),
-
           // Botões no topo
           SafeArea(
             child: Padding(
