@@ -60,6 +60,12 @@ flutter:
     - lib/assets/images/iconInoperantes.png
     - lib/assets/images/iconManutencoes.png
     - lib/assets/images/iconTerceirize.png
+    - lib/assets/images/iconCar.png
+    - lib/assets/images/iconDashboard.png
+    - lib/assets/images/iconEngrenagem.png
+    - lib/assets/images/iconExit.png
+    - lib/assets/images/iconMecanica.png
+    - lib/assets/images/iconMenu.png
 
   #   - images/a_dot_ham.jpeg
 
