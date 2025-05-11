@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:front_projeto_flutter/components/custom_drawer.dart'; // Importe o CustomDrawer atualizado
 import 'package:front_projeto_flutter/screens/inoperative.dart';
 
 class HomePage extends StatelessWidget {
@@ -8,89 +9,23 @@ class HomePage extends StatelessWidget {
   // Criação de uma GlobalKey para controlar o Scaffold
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  // Função de logout
+  void _handleLogout() {
+    // Implemente a lógica de logout aqui
+    print('Logout realizado');
+    // Navegue para a tela de login
+    // Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey, // Vincula a chave ao Scaffold
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            // Cabeçalho do menu
-            UserAccountsDrawerHeader(
-              accountName: const Text('Kelvin'),
-              accountEmail: const Text('Editar minhas informações'),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.grey[200],
-                child: const Icon(Icons.person, size: 40, color: Colors.grey),
-              ),
-              decoration: const BoxDecoration(color: Colors.green),
-            ),
-
-            // Itens do menu
-            _buildDrawerItem(
-              icon: Icons.request_quote,
-              text: 'Orçamentos',
-              onTap: () {
-                // Ação para Orçamentos
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.build,
-              text: 'Visualizar manutenções',
-              onTap: () {
-                // Ação para Visualizar manutenções
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.warning,
-              text: 'Veículos inoperantes',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => Inoperative()),
-                );
-              },
-
-            ),
-            _buildDrawerItem(
-              icon: Icons.bar_chart,
-              text: 'Dashboards',
-              onTap: () {
-                // Ação para Dashboards
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.store,
-              text: 'Mecânicas',
-              onTap: () {
-                // Ação para Mecânicas
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.directions_car,
-              text: 'Veículos',
-              onTap: () {
-                // Ação para Veículos
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.settings,
-              text: 'Configurações',
-              onTap: () {
-                // Ação para Configurações
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.exit_to_app,
-              text: 'Sair',
-              iconColor: Colors.red,
-              onTap: () {
-                // Ação para Sair
-              },
-            ),
-          ],
-        ),
+      drawer: CustomDrawer(
+        onLogout: _handleLogout,
+        userName: 'Kelvin',
+        userSubtitle: 'Editar minhas informações',
+        useCustomIcons: false, // Use ícones do Material Design
       ),
       body: Stack(
         children: [
@@ -207,20 +142,16 @@ class HomePage extends StatelessWidget {
           ),
         ],
         selectedItemColor: Colors.green,
+        onTap: (index) {
+          if (index == 2) {
+            // Se clicar em Inoperante
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Inoperative()),
+            );
+          }
+        },
       ),
-    );
-  }
-
-  Widget _buildDrawerItem({
-    required IconData icon,
-    required String text,
-    required VoidCallback onTap,
-    Color iconColor = Colors.green,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: iconColor),
-      title: Text(text),
-      onTap: onTap,
     );
   }
 }
