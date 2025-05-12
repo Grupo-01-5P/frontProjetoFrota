@@ -9,22 +9,11 @@ class HomePage extends StatelessWidget {
   // Criação de uma GlobalKey para controlar o Scaffold
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // Função de logout
-  void _handleLogout() {
-    // Implemente a lógica de logout aqui
-    print('Logout realizado');
-    // Navegue para a tela de login
-    // Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey, // Vincula a chave ao Scaffold
       drawer: CustomDrawer(
-        onLogout: _handleLogout,
-        userName: 'Kelvin',
-        userSubtitle: 'Editar minhas informações',
         useCustomIcons: false, // Use ícones do Material Design
       ),
       body: Stack(
@@ -45,11 +34,29 @@ class HomePage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // Botão para abrir a sidebar
-                  IconButton(
-                    icon: const Icon(Icons.menu, color: Colors.black),
-                    onPressed: () {
-                      _scaffoldKey.currentState?.openDrawer(); // Abre o Drawer
-                    },
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.white, // Círculo branco
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2), // Cor do sombreado
+                          blurRadius: 6, // Intensidade do sombreado
+                          offset: const Offset(2, 2), // Posição do sombreado
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: Image.asset(
+                        'lib/assets/images/iconMenu.png', // Caminho para a imagem do ícone de menu
+                        width: 24,
+                        height: 24,
+                      ),
+                      onPressed: () {
+                        _scaffoldKey.currentState?.openDrawer();
+                      },
+                    ),
                   ),
                   // Botão de notificações
                   Stack(

@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:geocoding/geocoding.dart';
 
 class ManutencaoDetailScreen extends StatefulWidget {
   final dynamic manutencao;
@@ -25,6 +26,101 @@ class _ManutencaoDetailScreenState extends State<ManutencaoDetailScreen> {
   String? _errorMessage;
   String? _successMessage;
   final MapController _mapController = MapController();
+  
+  // Variáveis para armazenar dados de localização
+  String _enderecoCompleto = 'Carregando endereço...';
+  bool _isLoadingAddress = true;
+  
+  @override
+  void initState() {
+    super.initState();
+    // Obter o endereço a partir das coordenadas quando a tela é iniciada
+    _obterEndereco();
+  }
+  
+  // Função para obter o endereço a partir de latitude e longitude
+  Future<void> _obterEndereco() async {
+    final bool hasCoordinates = 
+        widget.manutencao['latitude'] != null && 
+        widget.manutencao['longitude'] != null;
+    
+    if (!hasCoordinates) {
+      setState(() {
+        _enderecoCompleto = 'Localização não disponível';
+        _isLoadingAddress = false;
+      });
+      return;
+    }
+    
+    // Converter coordenadas para double
+    final latitude = double.tryParse(widget.manutencao['latitude']) ?? 0.0;
+    final longitude = double.tryParse(widget.manutencao['longitude']) ?? 0.0;
+    
+    if (latitude == 0.0 && longitude == 0.0) {
+      setState(() {
+        _enderecoCompleto = 'Coordenadas inválidas';
+        _isLoadingAddress = false;
+      });
+      return;
+    }
+    
+    try {
+      // Usar o pacote geocoding para fazer a geocodificação reversa
+      print('Coordenadas: $latitude, $longitude');
+      List<Placemark> placemarks = await placemarkFromCoordinates(latitude, longitude);
+      
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        String endereco = '';
+        
+        // Compor o endereço com as informações disponíveis
+        if (place.street != null && place.street!.isNotEmpty) {
+          endereco += place.street!;
+        }
+        
+        if (place.subLocality != null && place.subLocality!.isNotEmpty) {
+          if (endereco.isNotEmpty) endereco += ', ';
+          endereco += place.subLocality!;
+        }
+        
+        if (place.subAdministrativeArea != null && place.subAdministrativeArea!.isNotEmpty) {
+          if (endereco.isNotEmpty) endereco += ', ';
+          endereco += place.subAdministrativeArea!;
+        }
+        
+        if (place.locality != null && place.locality!.isNotEmpty) {
+          if (endereco.isNotEmpty) endereco += ', ';
+          endereco += place.locality!;
+        }
+        
+        if (place.administrativeArea != null && place.administrativeArea!.isNotEmpty) {
+          if (endereco.isNotEmpty) endereco += ', ';
+          endereco += place.administrativeArea!;
+        }
+        
+        if (place.postalCode != null && place.postalCode!.isNotEmpty) {
+          if (endereco.isNotEmpty) endereco += ' - ';
+          endereco += 'CEP: ' + place.postalCode!;
+        }
+        
+        setState(() {
+          _enderecoCompleto = endereco.isNotEmpty ? endereco : 'Endereço não encontrado';
+          _isLoadingAddress = false;
+        });
+      } else {
+        setState(() {
+          _enderecoCompleto = 'Endereço não encontrado';
+          _isLoadingAddress = false;
+        });
+      }
+    } catch (e) {
+      print('Erro ao obter endereço: $e');
+      setState(() {
+        _enderecoCompleto = 'Não foi possível obter o endereço';
+        _isLoadingAddress = false;
+      });
+    }
+  }
   
   // Função para formatar a data
   String _formatDate(String dateString) {
@@ -251,7 +347,12 @@ class _ManutencaoDetailScreenState extends State<ManutencaoDetailScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              // Recarregar dados da manutenção (se necessário)
+              // Recarregar dados do endereço
+              setState(() {
+                _isLoadingAddress = true;
+                _enderecoCompleto = 'Carregando endereço...';
+              });
+              _obterEndereco();
             },
           ),
         ],
@@ -452,7 +553,7 @@ class _ManutencaoDetailScreenState extends State<ManutencaoDetailScreen> {
                   ),
                 ),
                 
-                // Coordenadas da localização
+                // Endereço em vez das coordenadas
                 if (hasCoordinates)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -460,7 +561,7 @@ class _ManutencaoDetailScreenState extends State<ManutencaoDetailScreen> {
                       children: [
                         Expanded(
                           child: Container(
-                            padding: const EdgeInsets.all(8),
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: Colors.grey[200],
                               borderRadius: BorderRadius.circular(8),
@@ -468,17 +569,34 @@ class _ManutencaoDetailScreenState extends State<ManutencaoDetailScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Coordenadas:',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.location_on, size: 16, color: Colors.red),
+                                    const SizedBox(width: 4),
+                                    const Text(
+                                      'Localização:',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    _isLoadingAddress
+                                        ? const SizedBox(
+                                            width: 12,
+                                            height: 12,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.blue,
+                                            ),
+                                          )
+                                        : const SizedBox(),
+                                  ],
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Lat: $latitude, Long: $longitude',
-                                  style: const TextStyle(fontSize: 12),
+                                  _enderecoCompleto,
+                                  style: const TextStyle(fontSize: 14),
                                 ),
                               ],
                             ),

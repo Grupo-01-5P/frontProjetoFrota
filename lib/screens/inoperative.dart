@@ -6,13 +6,6 @@ class Inoperative extends StatelessWidget {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // Função de logout
-  void _handleLogout() {
-    // Implemente sua lógica de logout
-    print('Logout realizado');
-    // Navegue para a tela de login
-    // Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +13,6 @@ class Inoperative extends StatelessWidget {
       key: _scaffoldKey,
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       drawer: CustomDrawer(
-        onLogout: _handleLogout,
-        userName: 'Kelvin',
-        userSubtitle: 'Editar minhas informações',
         headerColor: const Color(0xFF148553),
         useCustomIcons: true, // Use ícones personalizados
       ),

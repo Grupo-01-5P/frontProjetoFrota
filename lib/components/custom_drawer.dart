@@ -5,23 +5,53 @@ import 'package:front_projeto_flutter/screens/inoperative.dart';
 import 'package:front_projeto_flutter/screens/login_page.dart';
 import 'package:front_projeto_flutter/screens/maintenences/firstPage.dart';
 
-class CustomDrawer extends StatelessWidget {
-  final Function onLogout;
-  final String userName;
-  final String userSubtitle;
-  final Widget? userAvatar;
+class CustomDrawer extends StatefulWidget {
   final Color headerColor;
   final bool useCustomIcons;
 
   const CustomDrawer({
     Key? key,
-    required this.onLogout,
-    this.userName = 'Kelvin',
-    this.userSubtitle = 'Editar minhas informações',
-    this.userAvatar,
     this.headerColor = const Color(0xFF148553),
     this.useCustomIcons = false,
   }) : super(key: key);
+
+  @override
+  _CustomDrawerState createState() => _CustomDrawerState();
+}
+
+class _CustomDrawerState extends State<CustomDrawer> {
+  final _secureStorage = const FlutterSecureStorage();
+  String userName = 'Usuário';
+  String userEmail = 'Editar minhas informações';
+  String userFunction = '';
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  // Função para carregar informações do usuário do armazenamento seguro
+  Future<void> _loadUserInfo() async {
+    try {
+      final name = await _secureStorage.read(key: 'user_name');
+      final email = await _secureStorage.read(key: 'user_email');
+      final function = await _secureStorage.read(key: 'user_function');
+
+      setState(() {
+        if (name != null && name.isNotEmpty) userName = name;
+        if (email != null && email.isNotEmpty) userEmail = email;
+        if (function != null && function.isNotEmpty) userFunction = function;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Erro ao carregar informações do usuário: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,324 +68,331 @@ class CustomDrawer extends StatelessWidget {
               style: const TextStyle(color: Colors.white),
             ),
             accountEmail: Text(
-              userSubtitle,
+              userFunction.isNotEmpty
+                  ? "$userEmail - $userFunction"
+                  : userEmail,
               style: const TextStyle(color: Colors.white),
             ),
-            currentAccountPicture: userAvatar ?? CircleAvatar(
+            currentAccountPicture: CircleAvatar(
               backgroundColor: const Color(0xFFD9D9D9),
-              child: const Icon(Icons.person, size: 40, color: Colors.white),
+              child:
+                  isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Icon(Icons.person, size: 40, color: Colors.white),
             ),
-            decoration: BoxDecoration(color: headerColor),
+            decoration: BoxDecoration(color: widget.headerColor),
           ),
-          
+
           // Home / Dashboard
-          useCustomIcons
+          widget.useCustomIcons
               ? _buildDrawerItemWithImage(
-                  imageAsset: 'lib/assets/images/iconDashboard.png',
-                  text: 'Home',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-                    
-                    // Verificar se já não está na Home
-                    if (!(context.widget is HomePage)) {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => HomePage()),
-                        (route) => false, // Remove todas as rotas anteriores
-                      );
-                    }
-                  },
-                )
+                imageAsset: 'lib/assets/images/iconDashboard.png',
+                text: 'Home',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
+
+                  // Verificar se já não está na Home
+                  if (!(context.widget is HomePage)) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => HomePage()),
+                      (route) => false, // Remove todas as rotas anteriores
+                    );
+                  }
+                },
+              )
               : _buildDrawerItemWithIcon(
-                  icon: Icons.home,
-                  text: 'Home',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-                    
-                    // Verificar se já não está na Home
-                    if (!(context.widget is HomePage)) {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => HomePage()),
-                        (route) => false, // Remove todas as rotas anteriores
-                      );
-                    }
-                  },
-                ),
+                icon: Icons.home,
+                text: 'Home',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
+
+                  // Verificar se já não está na Home
+                  if (!(context.widget is HomePage)) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => HomePage()),
+                      (route) => false, // Remove todas as rotas anteriores
+                    );
+                  }
+                },
+              ),
           const SizedBox(height: 8),
-          
+
           // Orçamentos
-          useCustomIcons
+          widget.useCustomIcons
               ? _buildDrawerItemWithImage(
-                  imageAsset: 'lib/assets/images/iconTerceirize.png',
-                  text: 'Orçamentos',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-                    
-                    // Navegação para a tela de orçamentos
-                    // Quando implementada, substitua este código:
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em desenvolvimento'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                )
+                imageAsset: 'lib/assets/images/iconTerceirize.png',
+                text: 'Orçamentos',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
+
+                  // Navegação para a tela de orçamentos
+                  // Quando implementada, substitua este código:
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Funcionalidade em desenvolvimento'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+              )
               : _buildDrawerItemWithIcon(
-                  icon: Icons.request_quote,
-                  text: 'Orçamentos',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-                    
-                    // Navegação para a tela de orçamentos
-                    // Quando implementada, substitua este código:
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em desenvolvimento'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                ),
+                icon: Icons.request_quote,
+                text: 'Orçamentos',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
+
+                  // Navegação para a tela de orçamentos
+                  // Quando implementada, substitua este código:
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Funcionalidade em desenvolvimento'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+              ),
           const SizedBox(height: 8),
-          
+
           // Manutenções
-          useCustomIcons
+          widget.useCustomIcons
               ? _buildDrawerItemWithImage(
-                  imageAsset: 'lib/assets/images/iconManutencoes.png',
-                  text: 'Visualizar manutenções',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-                    
-                    // Navegação direta para a tela de manutenções
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ManutencaoScreen(),
-                      ),
-                    );
-                  },
-                )
+                imageAsset: 'lib/assets/images/iconManutencoes.png',
+                text: 'Visualizar manutenções',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
+
+                  // Navegação direta para a tela de manutenções
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ManutencaoScreen(),
+                    ),
+                  );
+                },
+              )
               : _buildDrawerItemWithIcon(
-                  icon: Icons.build,
-                  text: 'Visualizar manutenções',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-                    
-                    // Navegação direta para a tela de manutenções
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ManutencaoScreen(),
-                      ),
-                    );
-                  },
-                ),
+                icon: Icons.build,
+                text: 'Visualizar manutenções',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
+
+                  // Navegação direta para a tela de manutenções
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ManutencaoScreen(),
+                    ),
+                  );
+                },
+              ),
           const SizedBox(height: 8),
-          
+
           // Veículos inoperantes - Usar navegação direta
-          useCustomIcons
+          widget.useCustomIcons
               ? _buildDrawerItemWithImage(
-                  imageAsset: 'lib/assets/images/iconInoperantes.png',
-                  text: 'Veículos inoperantes',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-                    
-                    // Navegação direta para a tela de inoperantes
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Inoperative(),
-                      ),
-                    );
-                  },
-                )
+                imageAsset: 'lib/assets/images/iconInoperantes.png',
+                text: 'Veículos inoperantes',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
+
+                  // Navegação direta para a tela de inoperantes
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Inoperative()),
+                  );
+                },
+              )
               : _buildDrawerItemWithIcon(
-                  icon: Icons.warning,
-                  text: 'Veículos inoperantes',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-                    
-                    // Navegação direta para a tela de inoperantes
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Inoperative(),
-                      ),
-                    );
-                  },
-                ),
+                icon: Icons.warning,
+                text: 'Veículos inoperantes',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
+
+                  // Navegação direta para a tela de inoperantes
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Inoperative()),
+                  );
+                },
+              ),
           const SizedBox(height: 8),
-          
+
           // Dashboards
-          useCustomIcons
+          widget.useCustomIcons
               ? _buildDrawerItemWithImage(
-                  imageAsset: 'lib/assets/images/iconDashboard.png',
-                  text: 'Dashboards',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-                    
-                    // Navegação para a tela de dashboards
-                    // Quando implementada, substitua este código:
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em desenvolvimento'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                )
+                imageAsset: 'lib/assets/images/iconDashboard.png',
+                text: 'Dashboards',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
+
+                  // Navegação para a tela de dashboards
+                  // Quando implementada, substitua este código:
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Funcionalidade em desenvolvimento'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+              )
               : _buildDrawerItemWithIcon(
-                  icon: Icons.bar_chart,
-                  text: 'Dashboards',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-                    
-                    // Navegação para a tela de dashboards
-                    // Quando implementada, substitua este código:
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em desenvolvimento'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                ),
+                icon: Icons.bar_chart,
+                text: 'Dashboards',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
+
+                  // Navegação para a tela de dashboards
+                  // Quando implementada, substitua este código:
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Funcionalidade em desenvolvimento'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+              ),
           const SizedBox(height: 8),
-          
+
           // Mecânicas
-          useCustomIcons
+          widget.useCustomIcons
               ? _buildDrawerItemWithImage(
-                  imageAsset: 'lib/assets/images/iconMecanica.png',
-                  text: 'Mecânicas',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-                    
-                    // Navegação para a tela de mecânicas
-                    // Quando implementada, substitua este código:
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em desenvolvimento'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                )
+                imageAsset: 'lib/assets/images/iconMecanica.png',
+                text: 'Mecânicas',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
+
+                  // Navegação para a tela de mecânicas
+                  // Quando implementada, substitua este código:
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Funcionalidade em desenvolvimento'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+              )
               : _buildDrawerItemWithIcon(
-                  icon: Icons.store,
-                  text: 'Mecânicas',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-                    
-                    // Navegação para a tela de mecânicas
-                    // Quando implementada, substitua este código:
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em desenvolvimento'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                ),
+                icon: Icons.store,
+                text: 'Mecânicas',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
+
+                  // Navegação para a tela de mecânicas
+                  // Quando implementada, substitua este código:
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Funcionalidade em desenvolvimento'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+              ),
           const SizedBox(height: 8),
-          
+
           // Veículos
-          useCustomIcons
+          widget.useCustomIcons
               ? _buildDrawerItemWithImage(
-                  imageAsset: 'lib/assets/images/iconCar.png',
-                  text: 'Veículos',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-                    
-                    // Navegação para a tela de veículos
-                    // Quando implementada, substitua este código:
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em desenvolvimento'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                )
+                imageAsset: 'lib/assets/images/iconCar.png',
+                text: 'Veículos',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
+
+                  // Navegação para a tela de veículos
+                  // Quando implementada, substitua este código:
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Funcionalidade em desenvolvimento'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+              )
               : _buildDrawerItemWithIcon(
-                  icon: Icons.directions_car,
-                  text: 'Veículos',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-                    
-                    // Navegação para a tela de veículos
-                    // Quando implementada, substitua este código:
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em desenvolvimento'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                ),
+                icon: Icons.directions_car,
+                text: 'Veículos',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
+
+                  // Navegação para a tela de veículos
+                  // Quando implementada, substitua este código:
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Funcionalidade em desenvolvimento'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+              ),
           const SizedBox(height: 8),
-          
+
           // Configurações
-          useCustomIcons
+          widget.useCustomIcons
               ? _buildDrawerItemWithImage(
-                  imageAsset: 'lib/assets/images/iconEngrenagem.png',
-                  text: 'Configurações',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-                    
-                    // Navegação para a tela de configurações
-                    // Quando implementada, substitua este código:
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em desenvolvimento'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                )
+                imageAsset: 'lib/assets/images/iconEngrenagem.png',
+                text: 'Configurações',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
+
+                  // Navegação para a tela de configurações
+                  // Quando implementada, substitua este código:
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Funcionalidade em desenvolvimento'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+              )
               : _buildDrawerItemWithIcon(
-                  icon: Icons.settings,
-                  text: 'Configurações',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-                    
-                    // Navegação para a tela de configurações
-                    // Quando implementada, substitua este código:
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em desenvolvimento'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                ),
+                icon: Icons.settings,
+                text: 'Configurações',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
+
+                  // Navegação para a tela de configurações
+                  // Quando implementada, substitua este código:
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Funcionalidade em desenvolvimento'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+              ),
           const SizedBox(height: 8),
-          
+
           // Sair
-          useCustomIcons
+          widget.useCustomIcons
               ? _buildDrawerItemWithImage(
-                  imageAsset: 'lib/assets/images/iconExit.png',
-                  text: 'Sair',
-                  onTap: () => _handleLogout(context),
-                )
+                imageAsset: 'lib/assets/images/iconExit.png',
+                text: 'Sair',
+                onTap: () => {
+                  _handleLogout(context)
+                },
+              )
               : _buildDrawerItemWithIcon(
-                  icon: Icons.exit_to_app,
-                  text: 'Sair',
-                  iconColor: Colors.red,
-                  onTap: () => _handleLogout(context),
-                ),
+                icon: Icons.exit_to_app,
+                text: 'Sair',
+                iconColor: Colors.red,
+                onTap: () => {
+                  _handleLogout(context), // Chama o método de logout
+                },
+              ),
         ],
       ),
     );
   }
 
   // Método para lidar com o logout
-  // Método para lidar com o logout
-void _handleLogout(BuildContext context) {
+  void _handleLogout(BuildContext context) {
+  // Armazenar uma referência ao contexto fora do escopo do dialog
+  final navigatorContext = Navigator.of(context);
+  
   // Fechar o drawer
   Navigator.pop(context);
-  
+
   // Mostrar diálogo de confirmação
   showDialog(
     context: context,
@@ -372,28 +409,32 @@ void _handleLogout(BuildContext context) {
           ),
           TextButton(
             onPressed: () async {
-              // Fecha o diálogo
-              Navigator.of(dialogContext).pop();
-              
-              // Executa o logout
-              onLogout();
-              
-              // Limpar o token (opcional)
               try {
+                // Limpar o token e informações do usuário
                 final secureStorage = const FlutterSecureStorage();
-                await secureStorage.delete(key: 'auth_token');
+                await secureStorage.deleteAll();
+                
+                // Fechar o diálogo
+                Navigator.of(dialogContext).pop();
+                
+                // Pequeno atraso para garantir que o diálogo feche completamente
+                await Future.delayed(const Duration(milliseconds: 100));
+                
+                // Usar o navigatorContext capturado anteriormente
+                navigatorContext.pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => LoginPage()),
+                  (route) => false, // Remove todas as rotas anteriores
+                );
               } catch (e) {
-                print('Erro ao deletar token: $e');
+                print('Erro ao fazer logout: $e');
+                // Tentar mostrar erro de forma segura
+                if (dialogContext.mounted) {
+                  Navigator.of(dialogContext).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Erro ao fazer logout: $e')),
+                  );
+                }
               }
-              
-              // Navega para a tela de login usando navegação direta
-              // e removendo todas as telas anteriores da pilha
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => LoginPage(),
-                ),
-              );
             },
             child: const Text('Sair'),
           ),
@@ -402,7 +443,7 @@ void _handleLogout(BuildContext context) {
     },
   );
 }
-  
+
   // Widget para item do menu com ícone
   Widget _buildDrawerItemWithIcon({
     required IconData icon,
@@ -424,11 +465,7 @@ void _handleLogout(BuildContext context) {
     required VoidCallback onTap,
   }) {
     return ListTile(
-      leading: Image.asset(
-        imageAsset,
-        width: 24,
-        height: 24,
-      ),
+      leading: Image.asset(imageAsset, width: 24, height: 24),
       title: Text(text),
       onTap: onTap,
     );

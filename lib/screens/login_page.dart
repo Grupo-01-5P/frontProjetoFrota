@@ -29,77 +29,119 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // Função para realizar o login
-  Future<void> _login() async {
-    // Validar o formulário
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+  // No arquivo login_page.dart, modifique a função _login()
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+Future<void> _login() async {
+  // Validar o formulário
+  if (!_formKey.currentState!.validate()) {
+    return;
+  }
 
-    try {
-      // URL da API - ajuste conforme necessário
-      final Uri url = Uri.parse('http://localhost:4040/login');
+  setState(() {
+    _isLoading = true;
+    _errorMessage = null;
+  });
+
+  try {
+    // URL da API - ajuste conforme necessário
+    final Uri url = Uri.parse('http://localhost:4040/login');
+    
+    // Preparar dados para envio
+    final Map<String, String> data = {
+      'email': _emailController.text.trim(),
+      'senha': _passwordController.text,
+    };
+
+    // Enviar requisição para a API
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(data),
+    );
+
+    if (response.statusCode == 200) {
+      // Login bem-sucedido
+      final responseData = jsonDecode(response.body);
       
-      // Preparar dados para envio
-      final Map<String, String> data = {
-        'email': _emailController.text.trim(),
-        'senha': _passwordController.text,
-      };
-
-      // Enviar requisição para a API
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(data),
-      );
-
-      if (response.statusCode == 200) {
-        // Login bem-sucedido
-        final responseData = jsonDecode(response.body);
+      // Salvar token
+      if (responseData['token'] != null) {
+        final String token = responseData['token'];
+        await _secureStorage.write(key: 'auth_token', value: token);
         
-        // Salvar token
-        if (responseData['token'] != null) {
-          await _secureStorage.write(key: 'auth_token', value: responseData['token']);
-          
-          //direciona para a tela inicial
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => HomePage(),
-            ),
-          );
-        } else {
-          setState(() {
-            _errorMessage = 'Resposta da API não contém token. Contate suporte.';
-          });
-        }
-      } else if (response.statusCode == 401) {
-        // Credenciais inválidas
-        setState(() {
-          _errorMessage = 'Email ou senha incorretos.';
-        });
+        // Obter ID do usuário (assumindo que a resposta contém o ID)
+        int userId = responseData['userId'] ?? 6; // Use o ID 6 como fallback ou o ID correto da resposta
+        
+        // Obter informações detalhadas do usuário
+        await _fetchUserDetails(userId, token);
+        
+        //direciona para a tela inicial
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomePage(),
+          ),
+        );
       } else {
-        // Outro erro da API
         setState(() {
-          _errorMessage = 'Erro no servidor. Tente novamente mais tarde.';
+          _errorMessage = 'Resposta da API não contém token. Contate suporte.';
         });
       }
-    } catch (e) {
-      // Erro de conexão ou outro erro
+    } else if (response.statusCode == 401) {
+      // Credenciais inválidas
       setState(() {
-        _errorMessage = 'Erro ao conectar com o servidor. Verifique sua conexão.';
+        _errorMessage = 'Email ou senha incorretos.';
       });
-      print('Erro de login: $e');
-    } finally {
+    } else {
+      // Outro erro da API
       setState(() {
-        _isLoading = false;
+        _errorMessage = 'Erro no servidor. Tente novamente mais tarde.';
       });
     }
+  } catch (e) {
+    // Erro de conexão ou outro erro
+    setState(() {
+      _errorMessage = 'Erro ao conectar com o servidor. Verifique sua conexão.';
+    });
+    print('Erro de login: $e');
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
   }
+}
+
+// Função para buscar detalhes do usuário
+Future<void> _fetchUserDetails(int userId, String token) async {
+  try {
+    final Uri userUrl = Uri.parse('http://localhost:4040/api/users/$userId');
+    
+    final userResponse = await http.get(
+      userUrl,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',  // Inclui o token na requisição
+      },
+    );
+    
+    if (userResponse.statusCode == 200) {
+      final userData = jsonDecode(userResponse.body);
+      
+      // Armazenar informações do usuário
+      await _secureStorage.write(key: 'user_id', value: userData['id'].toString());
+      await _secureStorage.write(key: 'user_name', value: userData['nome'] ?? 'Usuário');
+      await _secureStorage.write(key: 'user_email', value: userData['email'] ?? '');
+      await _secureStorage.write(key: 'user_function', value: userData['funcao'] ?? '');
+      
+      // Adicione outros dados do usuário que deseja armazenar
+      
+      print('Informações do usuário armazenadas com sucesso');
+    } else {
+      print('Erro ao obter detalhes do usuário: ${userResponse.statusCode}');
+    }
+  } catch (e) {
+    print('Exceção ao obter detalhes do usuário: $e');
+  }
+}
 
   @override
   Widget build(BuildContext context) {
