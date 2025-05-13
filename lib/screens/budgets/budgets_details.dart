@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:front_projeto_flutter/screens/budgets/budgets_page.dart';
+import 'package:front_projeto_flutter/screens/budgets/budgets_listage.dart';
+import 'package:front_projeto_flutter/screens/budgets/budgets_reproval.dart';
 
 class BudgetsDetails extends StatelessWidget {
   BudgetsDetails({super.key});
@@ -29,6 +31,7 @@ class BudgetsDetails extends StatelessWidget {
               text: 'Orçamentos',
               onTap: () {
                 Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsPage()));
+                print("Levando para a página de budget page");
               },
             ),
             _buildDrawerItem(icon: Icons.build, text: 'Visualizar manutenções', onTap: () {}),
@@ -154,7 +157,8 @@ class BudgetsDetails extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        // Ação para Aprovar
+                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsListage()));
+                        print("Levando para a página de budget listage");
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
@@ -170,7 +174,8 @@ class BudgetsDetails extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        // Ação para Reprovar
+                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsReproval()));
+                        print("Levando para a página de budget reproval");
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
