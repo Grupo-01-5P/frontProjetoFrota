@@ -60,6 +60,8 @@ flutter:
     - lib/assets/images/_2009906610368.svg
     - lib/assets/images/tire.png
     - lib/assets/images/Vector.png
+    - lib/assets/images/carro.svg
+    - lib/assets/images/carromais.svg
 
   #   - images/a_dot_ham.jpeg
 
