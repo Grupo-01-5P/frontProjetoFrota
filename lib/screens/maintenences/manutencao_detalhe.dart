@@ -296,7 +296,7 @@ class _ManutencaoDetailScreenState extends State<ManutencaoDetailScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
               ),
-              child: const Text('Reprovar'),
+              child: const Text('Reprovar', style: TextStyle(color: Colors.white),),
               onPressed: () {
                 if (_motivoController.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -714,6 +714,7 @@ class _ManutencaoDetailScreenState extends State<ManutencaoDetailScreen> {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
@@ -731,6 +732,7 @@ class _ManutencaoDetailScreenState extends State<ManutencaoDetailScreen> {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),

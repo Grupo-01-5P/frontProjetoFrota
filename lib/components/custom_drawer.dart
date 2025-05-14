@@ -4,6 +4,7 @@ import 'package:front_projeto_flutter/screens/home_page.dart';
 import 'package:front_projeto_flutter/screens/inoperative.dart';
 import 'package:front_projeto_flutter/screens/login_page.dart';
 import 'package:front_projeto_flutter/screens/maintenences/firstPage.dart';
+import 'package:front_projeto_flutter/screens/users/firstPage.dart';
 
 class CustomDrawer extends StatefulWidget {
   final Color headerColor;
@@ -331,12 +332,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
           widget.useCustomIcons
               ? _buildDrawerItemWithImage(
                 imageAsset: 'lib/assets/images/iconEngrenagem.png',
-                text: 'Configurações',
+                text: 'Usuarios',
                 onTap: () {
                   Navigator.pop(context); // Fechar o drawer
 
-                  // Navegação para a tela de configurações
-                  // Quando implementada, substitua este código:
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Funcionalidade em desenvolvimento'),
@@ -346,17 +345,17 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 },
               )
               : _buildDrawerItemWithIcon(
-                icon: Icons.settings,
-                text: 'Configurações',
+                icon: Icons.people,
+                text: 'Usuarios',
                 onTap: () {
                   Navigator.pop(context); // Fechar o drawer
 
                   // Navegação para a tela de configurações
                   // Quando implementada, substitua este código:
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Funcionalidade em desenvolvimento'),
-                      duration: Duration(seconds: 2),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const UsuarioScreen(),
                     ),
                   );
                 },

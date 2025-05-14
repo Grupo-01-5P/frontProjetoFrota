@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:front_projeto_flutter/screens/home_page.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Adicione esta dependência
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -67,9 +68,11 @@ Future<void> _login() async {
       if (responseData['token'] != null) {
         final String token = responseData['token'];
         await _secureStorage.write(key: 'auth_token', value: token);
+
+        final Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
         
-        // Obter ID do usuário (assumindo que a resposta contém o ID)
-        int userId = responseData['userId'] ?? 6; // Use o ID 6 como fallback ou o ID correto da resposta
+        // Extrair o ID do usuário do token decodificado
+        int userId = decodedToken['id'];
         
         // Obter informações detalhadas do usuário
         await _fetchUserDetails(userId, token);

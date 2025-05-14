@@ -17,7 +17,7 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
   bool _isLoading = true;
   List<dynamic> _manutencoes = [];
   String? _errorMessage;
-  String _filtroAtivo = 'Aprovada'; // Filtro inicial: Aprovadas (Em Andamento)
+  String _filtroAtivo = 'aprovada'; // Filtro inicial: Aprovadas (Em Andamento)
 
   @override
   void initState() {
@@ -99,7 +99,7 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'localhost':
-        return const Color(0xFF0C7E3D); // Verde para Aprovada/em andamento
+        return const Color(0xFF0C7E3D); // Verde para aprovada/em andamento
       case 'Reprovada':
         return Colors.red; // Vermelho para Reprovada
       case 'concluída':
@@ -112,7 +112,7 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
   // Função para exibir o texto de status correto
   String _getStatusText(String status) {
     switch (status.toLowerCase()) {
-      case 'Aprovada':
+      case 'aprovada':
         return 'Em Andamento';
       case 'Reprovada':
         return 'Reprovada';
@@ -148,14 +148,14 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
                   child: GestureDetector(
                     onTap: () {
                       setState(() {
-                        _filtroAtivo = 'Aprovada';
+                        _filtroAtivo = 'aprovada';
                       });
                       _fetchManutencoes();
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: _filtroAtivo == 'Aprovada'
+                        color: _filtroAtivo == 'aprovada'
                             ? const Color(0xFF0C7E3D)
                             : Colors.grey[200],
                         borderRadius: BorderRadius.circular(20),
@@ -164,7 +164,7 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
                         child: Text(
                           'Em Andamento',
                           style: TextStyle(
-                            color: _filtroAtivo == 'Aprovada'
+                            color: _filtroAtivo == 'aprovada'
                                 ? Colors.white
                                 : Colors.grey,
                             fontWeight: FontWeight.bold,
@@ -467,7 +467,7 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
                                                   _fetchManutencoes();
                                                 }
                                               },
-                                              child: const Text('Ver detalhes'),
+                                              child: const Text('Ver detalhes', style: TextStyle(color: Colors.white),),
                                             ),
                                           ),
                                         ],
