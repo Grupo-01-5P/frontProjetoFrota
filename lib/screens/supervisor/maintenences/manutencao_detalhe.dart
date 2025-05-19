@@ -7,19 +7,19 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geocoding/geocoding.dart';
 
-class ManutencaoDetailScreen extends StatefulWidget {
+class ManutencaoDetailScreenSupervisor extends StatefulWidget {
   final dynamic manutencao;
 
-  const ManutencaoDetailScreen({
+  const ManutencaoDetailScreenSupervisor({
     Key? key,
     required this.manutencao,
   }) : super(key: key);
 
   @override
-  _ManutencaoDetailScreenState createState() => _ManutencaoDetailScreenState();
+  _ManutencaoDetailScreenSupervisorState createState() => _ManutencaoDetailScreenSupervisorState();
 }
 
-class _ManutencaoDetailScreenState extends State<ManutencaoDetailScreen> {
+class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScreenSupervisor> {
   final _secureStorage = const FlutterSecureStorage();
   final _motivoController = TextEditingController();
   bool _isLoading = false;

@@ -259,7 +259,6 @@ class _CadastrarUsuarioScreenState extends State<CadastrarUsuarioScreen> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: const Color(0xFFF5F5F5),
-      
       appBar: AppBar(
         leading: Container(
           padding: const EdgeInsets.all(4),

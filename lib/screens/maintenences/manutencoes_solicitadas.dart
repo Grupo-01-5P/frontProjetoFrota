@@ -242,7 +242,7 @@ class _ManutencoesSolicitadasScreenState extends State<ManutencoesSolicitadasScr
                                           ),
                                         ),
                                         Text(
-                                          manutencao['analista']['nome'],
+                                          manutencao['supervisor']['nome'],
                                           style: const TextStyle(
                                             fontSize: 14,
                                           ),

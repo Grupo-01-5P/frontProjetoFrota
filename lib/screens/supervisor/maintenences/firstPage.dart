@@ -1,19 +1,18 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:front_projeto_flutter/components/custom_drawer.dart';
-import 'package:front_projeto_flutter/screens/maintenences/manutencoes_geral.dart';
-import 'package:front_projeto_flutter/screens/maintenences/manutencoes_solicitadas.dart';
+import 'package:front_projeto_flutter/screens/supervisor/maintenences/manutencoes_geral.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class ManutencaoScreen extends StatefulWidget {
-  const ManutencaoScreen({Key? key}) : super(key: key);
+class ManutencaoScreenSupervisor extends StatefulWidget {
+  const ManutencaoScreenSupervisor({Key? key}) : super(key: key);
 
   @override
-  _ManutencaoScreenState createState() => _ManutencaoScreenState();
+  _ManutencaoScreenSupervisorState createState() => _ManutencaoScreenSupervisorState();
 }
 
-class _ManutencaoScreenState extends State<ManutencaoScreen> {
+class _ManutencaoScreenSupervisorState extends State<ManutencaoScreenSupervisor> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final _secureStorage = const FlutterSecureStorage();
   
@@ -214,12 +213,12 @@ class _ManutencaoScreenState extends State<ManutencaoScreen> {
                     child: InkWell(
                       onTap: () {
                         //navega para tela de manutenções solicitadas
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ManutencoesSolicitadasScreen(),
-                            ),
-                          );
+                        // Navigator.push(
+                        //     context,
+                        //     MaterialPageRoute(
+                        //       builder: (context) => const ManutencoesSolicitadasScreen(),
+                        //     ),
+                        //   );
                       },
                       child: Card(
                         elevation: 4,
@@ -234,7 +233,7 @@ class _ManutencaoScreenState extends State<ManutencaoScreen> {
                                 children: const [
                                   Center(
                                     child: Text(
-                                      'Manutenções solicitadas',
+                                      'Solicitar Manutenção',
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w500,
@@ -295,7 +294,7 @@ class _ManutencaoScreenState extends State<ManutencaoScreen> {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const ManutencoesGeralScreen(),
+                              builder: (context) => const ManutencoesGeralScreenSupervisor(),
                             ),
                           );
                       },
