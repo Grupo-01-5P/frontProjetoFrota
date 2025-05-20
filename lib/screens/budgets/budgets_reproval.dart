@@ -27,7 +27,10 @@ class _BudgetsReprovalState extends State<BudgetsReproval> {
               children: [
                 // Botões do topo
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -40,7 +43,10 @@ class _BudgetsReprovalState extends State<BudgetsReproval> {
                       Stack(
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.notifications, color: Colors.black),
+                            icon: const Icon(
+                              Icons.notifications,
+                              color: Colors.black,
+                            ),
                             onPressed: () {},
                           ),
                           Positioned(
@@ -119,7 +125,9 @@ class _BudgetsReprovalState extends State<BudgetsReproval> {
                                 Row(
                                   children: [
                                     const Expanded(
-                                      child: Text('Receber um novo orçamento do mecânico?'),
+                                      child: Text(
+                                        'Receber um novo orçamento do mecânico?',
+                                      ),
                                     ),
                                     Checkbox(
                                       value: _receiveNewBudget,
@@ -143,29 +151,12 @@ class _BudgetsReprovalState extends State<BudgetsReproval> {
 
                 // Botões fora do Card, no final da página
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: Row(
                     children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            // Ação de enviar
-                            Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsExibition()));
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            'ENVIAR',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
@@ -181,6 +172,30 @@ class _BudgetsReprovalState extends State<BudgetsReproval> {
                           ),
                           child: const Text(
                             'CANCELAR',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // Ação de enviar
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => BudgetsExibition(),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text(
+                            'ENVIAR',
                             style: TextStyle(color: Colors.white, fontSize: 16),
                           ),
                         ),
@@ -211,16 +226,47 @@ class _BudgetsReprovalState extends State<BudgetsReproval> {
             ),
             decoration: const BoxDecoration(color: Colors.green),
           ),
-          _buildDrawerItem(icon: Icons.request_quote, text: 'Orçamentos', onTap: () {
-            Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsPage()));
-          }),
-          _buildDrawerItem(icon: Icons.build, text: 'Visualizar manutenções', onTap: () {}),
-          _buildDrawerItem(icon: Icons.warning, text: 'Veículos inoperantes', onTap: () {}),
-          _buildDrawerItem(icon: Icons.bar_chart, text: 'Dashboards', onTap: () {}),
+          _buildDrawerItem(
+            icon: Icons.request_quote,
+            text: 'Orçamentos',
+            onTap: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (context) => BudgetsPage()));
+            },
+          ),
+          _buildDrawerItem(
+            icon: Icons.build,
+            text: 'Visualizar manutenções',
+            onTap: () {},
+          ),
+          _buildDrawerItem(
+            icon: Icons.warning,
+            text: 'Veículos inoperantes',
+            onTap: () {},
+          ),
+          _buildDrawerItem(
+            icon: Icons.bar_chart,
+            text: 'Dashboards',
+            onTap: () {},
+          ),
           _buildDrawerItem(icon: Icons.store, text: 'Mecânicas', onTap: () {}),
-          _buildDrawerItem(icon: Icons.directions_car, text: 'Veículos', onTap: () {}),
-          _buildDrawerItem(icon: Icons.settings, text: 'Configurações', onTap: () {}),
-          _buildDrawerItem(icon: Icons.exit_to_app, text: 'Sair', iconColor: Colors.red, onTap: () {}),
+          _buildDrawerItem(
+            icon: Icons.directions_car,
+            text: 'Veículos',
+            onTap: () {},
+          ),
+          _buildDrawerItem(
+            icon: Icons.settings,
+            text: 'Configurações',
+            onTap: () {},
+          ),
+          _buildDrawerItem(
+            icon: Icons.exit_to_app,
+            text: 'Sair',
+            iconColor: Colors.red,
+            onTap: () {},
+          ),
         ],
       ),
     );

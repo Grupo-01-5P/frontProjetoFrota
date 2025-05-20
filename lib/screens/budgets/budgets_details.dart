@@ -155,38 +155,77 @@ class BudgetsDetails extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsListage()));
-                        print("Levando para a página de budget listage");
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // Ação de cancelar
+                            Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsReproval()));
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text(
+                            'Reprovar',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ),
                       ),
-                      child: const Text(
-                        'Aprovar',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // Ação de enviar
+                            Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsListage()));
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text(
+                            'Aprovar',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsReproval()));
-                        print("Levando para a página de budget reproval");
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: const Text(
-                        'Reprovar',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
+                  // Expanded(
+                  //   child: ElevatedButton(
+                  //     onPressed: () {
+                  //       Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsListage()));
+                  //       print("Levando para a página de budget listage");
+                  //     },
+                  //     style: ElevatedButton.styleFrom(
+                  //       backgroundColor: Colors.green,
+                  //       padding: const EdgeInsets.symmetric(vertical: 16),
+                  //     ),
+                  //     child: const Text(
+                  //       'Aprovar',
+                  //       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  //     ),
+                  //   ),
+                  // ),
+                  // const SizedBox(width: 16),
+                  // Expanded(
+                  //   child: ElevatedButton(
+                  //     onPressed: () {
+                  //       Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsReproval()));
+                  //       print("Levando para a página de budget reproval");
+                  //     },
+                  //     style: ElevatedButton.styleFrom(
+                  //       backgroundColor: Colors.red,
+                  //       padding: const EdgeInsets.symmetric(vertical: 16),
+                  //     ),
+                  //     child: const Text(
+                  //       'Reprovar',
+                  //       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
             ),
