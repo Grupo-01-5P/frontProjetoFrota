@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:front_projeto_flutter/screens/budgets/budgets_listage.dart';
+import 'package:front_projeto_flutter/screens/vehicles/vehicles_listage.dart';
 import 'package:front_projeto_flutter/screens/budgets/budgets_page.dart';
+import 'package:front_projeto_flutter/screens/vehicles/vehicles_register.dart';
 
 class VehiclesPage extends StatelessWidget {
   VehiclesPage({super.key});
@@ -169,7 +170,7 @@ class VehiclesPage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => BudgetsListage(),
+                          builder: (context) => VehiclesRegister(),
                         ),
                       );
                     },
@@ -205,7 +206,7 @@ class VehiclesPage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => BudgetsListage(),
+                          builder: (context) => VehiclesListage(),
                         ),
                       );
                     },
