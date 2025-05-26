@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:front_projeto_flutter/screens/home_page.dart';
-import 'package:front_projeto_flutter/screens/inoperative.dart';
+import 'package:front_projeto_flutter/screens/inoperatives/inoperative.dart';
 import 'package:front_projeto_flutter/screens/login_page.dart';
 import 'package:front_projeto_flutter/screens/maintenences/firstPage.dart';
 

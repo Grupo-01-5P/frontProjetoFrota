@@ -43,7 +43,7 @@ class _ManutencoesSolicitadasScreenState extends State<ManutencoesSolicitadasScr
 
       // Opção 1: Filtrar no servidor (adicionar parâmetro de filtro à URL)
       // Modifique a URL para incluir o filtro por status "pendente"
-      final url = Uri.parse('http://localhost:4040/api/maintenence/?status=pendente');
+      final url = Uri.parse('http://localhost:3000/api/maintenence/?status=pendente');
       
       // Nota: Se seu backend não suportar filtragem por parâmetros de URL,
       // use a Opção 2 mostrada na explicação acima

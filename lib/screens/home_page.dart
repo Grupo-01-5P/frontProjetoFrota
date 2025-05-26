@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:front_projeto_flutter/components/custom_drawer.dart'; // Importe o CustomDrawer atualizado
-import 'package:front_projeto_flutter/screens/inoperative.dart';
+import 'package:front_projeto_flutter/screens/inoperatives/inoperative.dart';
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});

@@ -49,7 +49,7 @@ class _ManutencaoScreenState extends State<ManutencaoScreen> {
       
       // Fazer a requisição para o endpoint
       final response = await http.get(
-        Uri.parse('http://localhost:4040/api/maintenence/'),
+        Uri.parse('http://localhost:3000/api/maintenence/'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

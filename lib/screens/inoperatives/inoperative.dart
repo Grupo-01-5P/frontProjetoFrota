@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'viewInoperative.dart';
 import 'package:front_projeto_flutter/components/custom_drawer.dart'; // Importe o CustomDrawer
 
 class Inoperative extends StatelessWidget {
@@ -6,16 +7,17 @@ class Inoperative extends StatelessWidget {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      backgroundColor: const Color.fromARGB(250, 250, 250, 250),
+
       drawer: CustomDrawer(
         headerColor: const Color(0xFF148553),
         useCustomIcons: true, // Use ícones personalizados
       ),
+
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -31,7 +33,9 @@ class Inoperative extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2), // Cor do sombreado
+                          color: Colors.black.withOpacity(
+                            0.2,
+                          ), // Cor do sombreado
                           blurRadius: 6, // Intensidade do sombreado
                           offset: const Offset(2, 2), // Posição do sombreado
                         ),
@@ -97,7 +101,10 @@ class Inoperative extends StatelessWidget {
                             borderSide: BorderSide.none,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                         ),
                       ),
                     ],
@@ -105,72 +112,82 @@ class Inoperative extends StatelessWidget {
                 ),
               ),
 
-              Card(
-                color: Colors.white,
-                elevation: 8,
-                shadowColor: Colors.black.withOpacity(0.2),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: const [
-                          Text(
-                            "RDM4J56",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 20,
-                            ),
-                          ),
-                          Text(
-                            "Toyota Corolla XEi 2022",
-                            style: TextStyle(
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        "Prata",
-                        style: TextStyle(fontSize: 14),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        "Logística Express Ltda.",
-                        style: TextStyle(fontSize: 14),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            "Frota Operacional",
-                            style: TextStyle(fontSize: 14),
-                          ),
-                          const SizedBox(width: 16),
-                          Container(
-                            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFAC26).withOpacity(0.7),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Text(
-                              "Inoperante",
+              InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) =>
+                              ViewInoperative(), // Substitua pela sua tela
+                    ),
+                  );
+                },
+                child: Card(
+                  color: Colors.white,
+                  elevation: 8,
+                  shadowColor: Colors.black.withOpacity(0.2),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: const [
+                            Text(
+                              "RDM4J56",
                               style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 20,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                            Text(
+                              "Toyota Corolla XEi 2022",
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        const Text("Prata", style: TextStyle(fontSize: 14)),
+                        const SizedBox(height: 8),
+                        const Text(
+                          "Logística Express Ltda.",
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "Frota Operacional",
+                              style: TextStyle(fontSize: 14),
+                            ),
+                            const SizedBox(width: 16),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 6,
+                                horizontal: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFAC26).withOpacity(0.7),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Text(
+                                "Inoperante",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
