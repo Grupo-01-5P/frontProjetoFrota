@@ -4,9 +4,10 @@ import 'package:front_projeto_flutter/screens/budgets/budgets_page.dart';
 import 'package:front_projeto_flutter/screens/budgets/budgets_details.dart';
 import 'package:front_projeto_flutter/screens/vehicles/vehicles_page.dart';
 import 'package:front_projeto_flutter/screens/vehicles/vehicles_details.dart';
+import 'package:front_projeto_flutter/screens/vehicles/vehicle_service.dart';
 
 class VehiclesListage extends StatefulWidget {
-  VehiclesListage({super.key});
+  const VehiclesListage({super.key});
 
   @override
   _VehiclesListageState createState() => _VehiclesListageState();
@@ -15,18 +16,62 @@ class VehiclesListage extends StatefulWidget {
 class _VehiclesListageState extends State<VehiclesListage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _searchController = TextEditingController();
+  final VehicleService _vehicleService = VehicleService();
+  List<dynamic> _vehicles = [];
+  bool _isLoading = true;
+  String _errorMessage = '';
 
-  // Exemplo de veículos (pode trocar depois para a sua API)
-  final List<Map<String, String>> veiculos = [
-    {
-      'placa': 'RDM-4J56',
-      'modelo': 'Toyota Corolla XEi',
-      'ano': '2022',
-      'cor': 'Prata',
-      'empresa': 'Logística Express Ltda.',
-      'categoria': 'Frota Operacional',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadVehicles();
+  }
+
+  Future<void> _loadVehicles() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      final vehicles = await _vehicleService.getVehicles();
+      setState(() {
+        _vehicles = vehicles;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Erro ao carregar veículos: ${e.toString()}';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _searchVehicles() async {
+    final plate = _searchController.text.trim();
+    if (plate.isEmpty) {
+      await _loadVehicles();
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      final results = await _vehicleService.searchVehicleByPlate(plate);
+      setState(() {
+        _vehicles = results;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Erro na busca: ${e.toString()}';
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,11 +141,9 @@ class _VehiclesListageState extends State<VehiclesListage> {
       ),
       body: Stack(
         children: [
-          // Conteúdo principal
           Column(
             children: [
-              const SizedBox(height: 80), // Espaço para o topo (ícones)
-              // Card de busca
+              const SizedBox(height: 80),
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Container(
@@ -133,7 +176,7 @@ class _VehiclesListageState extends State<VehiclesListage> {
                           decoration: InputDecoration(
                             hintText: 'Digite a placa do veículo',
                             filled: true,
-                            fillColor: Colors.grey[50], // Fundo cinza bem claro
+                            fillColor: Colors.grey[50],
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                               borderSide: BorderSide.none,
@@ -142,109 +185,101 @@ class _VehiclesListageState extends State<VehiclesListage> {
                               horizontal: 16,
                               vertical: 12,
                             ),
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.search),
+                              onPressed: _searchVehicles,
+                            ),
                           ),
+                          onSubmitted: (_) => _searchVehicles(),
                         ),
                       ],
                     ),
                   ),
                 ),
               ),
-
-              // Listagem de veículos
               Expanded(
-                child: Container(
-                  child: ListView.builder(
-                    itemCount: veiculos.length,
-                    itemBuilder: (context, index) {
-                      final veiculo = veiculos[index];
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 6,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => VehiclesDetails(),
+                child:
+                    _isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : _errorMessage.isNotEmpty
+                        ? Center(child: Text(_errorMessage))
+                        : _vehicles.isEmpty
+                        ? const Center(child: Text('Nenhum veículo encontrado'))
+                        : ListView.builder(
+                          itemCount: _vehicles.length,
+                          itemBuilder: (context, index) {
+                            final vehicle = _vehicles[index];
+                            return Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
                                 ),
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        veiculo['placa']!,
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
+                                child: InkWell(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => VehiclesDetails(
+                                              vehicleId: vehicle['id'],
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              vehicle['placa'] ?? 'N/A',
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Text(
+                                              '${vehicle['modelo'] ?? 'N/A'}\n'
+                                              '${vehicle['anoFabricacao']?.toString() ?? 'N/A'}',
+                                              textAlign: TextAlign.right,
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                      Text(
-                                        '${veiculo['modelo']} \n${veiculo['ano']}',
-                                        textAlign: TextAlign.right,
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    veiculo['cor']!,
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    veiculo['empresa']!,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey[600],
+                                        // ... (restante do seu código)
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    veiculo['categoria']!,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
-                ),
               ),
             ],
           ),
-
-          // Ícones no topo
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Ícone do menu em círculo branco com sombra
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -262,8 +297,6 @@ class _VehiclesListageState extends State<VehiclesListage> {
                       onPressed: () => _scaffoldKey.currentState?.openDrawer(),
                     ),
                   ),
-
-                  // Ícone de notificação em círculo branco com sombra
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
