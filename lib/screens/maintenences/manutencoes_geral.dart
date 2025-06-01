@@ -47,7 +47,7 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
       // Nota: Ajustar para seu ambiente - usar 10.0.2.2 para emulador Android
       // Se seu backend não suporta filtragem por status diretamente, você precisará
       // implementar a filtragem do lado do cliente
-      final url = Uri.parse('http://localhost:3000/api/maintenence/?status=$_filtroAtivo');
+      final url = Uri.parse('http://localhost:4040/api/maintenence/?status=$_filtroAtivo');
       
       final response = await http.get(
         url,

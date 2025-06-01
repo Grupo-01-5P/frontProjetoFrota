@@ -78,7 +78,7 @@ class _InoperativeState extends State<Inoperative> {
     try {
       final token = await _secureStorage.read(key: 'token');
       final response = await http.get(
-        Uri.parse('http://localhost:3000/inoperative/inoperative'),
+        Uri.parse('http://localhost:4040/inoperative/inoperative'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

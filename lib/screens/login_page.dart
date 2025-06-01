@@ -44,7 +44,7 @@ Future<void> _login() async {
 
   try {
     // URL da API - ajuste conforme necessário
-    final Uri url = Uri.parse('http://localhost:3000/login');
+    final Uri url = Uri.parse('http://localhost:4040/login');
     
     // Preparar dados para envio
     final Map<String, String> data = {
@@ -113,7 +113,7 @@ Future<void> _login() async {
 // Função para buscar detalhes do usuário
 Future<void> _fetchUserDetails(int userId, String token) async {
   try {
-    final Uri userUrl = Uri.parse('http://localhost:3000/api/users/$userId');
+    final Uri userUrl = Uri.parse('http://localhost:4040/api/users/$userId');
     
     final userResponse = await http.get(
       userUrl,

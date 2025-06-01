@@ -74,7 +74,7 @@ class _ViewInoperativeState extends State<ViewInoperative> {
       final token = await _secureStorage.read(key: 'token');
       final response = await http.get(
         Uri.parse(
-          'http://localhost:3000/inoperative/inoperative/${widget.inoperanteId}',
+          'http://localhost:4040/inoperative/inoperative/${widget.inoperanteId}',
         ),
         headers: {
           'Authorization': 'Bearer $token',
@@ -106,7 +106,7 @@ class _ViewInoperativeState extends State<ViewInoperative> {
       final token = await _secureStorage.read(key: 'token');
       final response = await http.get(
         Uri.parse(
-          'http://localhost:3000/inoperative/${widget.inoperanteId}/phase',
+          'http://localhost:4040/inoperative/${widget.inoperanteId}/phase',
         ),
         headers: {
           'Authorization': 'Bearer $token',
@@ -138,7 +138,7 @@ class _ViewInoperativeState extends State<ViewInoperative> {
       final token = await _secureStorage.read(key: 'token');
       final response = await http.put(
         Uri.parse(
-          'http://localhost:3000/inoperative/${widget.inoperanteId}/phase',
+          'http://localhost:4040/inoperative/${widget.inoperanteId}/phase',
         ),
         headers: {
           'Authorization': 'Bearer $token',
