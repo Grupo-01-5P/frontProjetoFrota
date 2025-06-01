@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:front_projeto_flutter/components/custom_drawer.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ViewInoperative extends StatefulWidget {
-  const ViewInoperative({super.key});
+  final int inoperanteId;
+
+  const ViewInoperative({super.key, required this.inoperanteId});
 
   @override
   State<ViewInoperative> createState() => _ViewInoperativeState();
@@ -13,11 +17,21 @@ class _ViewInoperativeState extends State<ViewInoperative> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
-  List<int> buttonStates = [0, 0, 0, 0];
+  bool isLoading = true;
+  Map<String, dynamic>? inoperanteData;
+  String? faseAtual;
 
   String userFuncao = '';
   String userNome = '';
   String userEmail = '';
+
+  // Enum para controle das fases
+  final Map<String, int> fasesEnum = {
+    'FASE1': 0,
+    'FASE2': 1,
+    'FASE3': 2,
+    'FASE4': 3,
+  };
 
   final List<String> titles = [
     "Iniciar viagem até a mecânica",
@@ -35,15 +49,15 @@ class _ViewInoperativeState extends State<ViewInoperative> {
 
   final List<String> titlesAnalista = [
     "Ponto de partida",
-    "Serviço finalizado",
     "Serviço em andamento",
+    "Serviço finalizado",
     "Chegada no destino de origem",
   ];
 
   final List<String> descriptionsAnalista = [
     "O veículo saiu do ponto inicial. Acompanhe o trajeto.",
-    "A manutenção foi realizada. Aguardando retorno.",
     "O serviço está sendo executado conforme cronograma.",
+    "A manutenção foi realizada. Aguardando retorno.",
     "O veículo retornou à origem com sucesso.",
   ];
 
@@ -51,6 +65,99 @@ class _ViewInoperativeState extends State<ViewInoperative> {
   void initState() {
     super.initState();
     loadUserInfo();
+    fetchInoperanteDetails();
+    fetchPhaseInfo();
+  }
+
+  Future<void> fetchInoperanteDetails() async {
+    try {
+      final token = await _secureStorage.read(key: 'token');
+      final response = await http.get(
+        Uri.parse(
+          'http://localhost:3000/inoperative/inoperative/${widget.inoperanteId}',
+        ),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          inoperanteData = json.decode(response.body);
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+        // Tratar erro aqui
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      // Tratar erro aqui
+    }
+  }
+
+  Future<void> fetchPhaseInfo() async {
+    try {
+      final token = await _secureStorage.read(key: 'token');
+      final response = await http.get(
+        Uri.parse(
+          'http://localhost:3000/inoperative/${widget.inoperanteId}/phase',
+        ),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          faseAtual = data['faseAtual'];
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      print('Erro ao buscar fase: $e');
+    }
+  }
+
+  Future<void> updatePhase(String novaFase) async {
+    try {
+      final token = await _secureStorage.read(key: 'token');
+      final response = await http.put(
+        Uri.parse(
+          'http://localhost:3000/inoperative/${widget.inoperanteId}/phase',
+        ),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({'fase': novaFase}),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          faseAtual = novaFase;
+        });
+      } else {
+        // Tratar erro aqui
+        print('Erro ao atualizar fase');
+      }
+    } catch (e) {
+      print('Erro ao atualizar fase: $e');
+    }
   }
 
   Future<void> loadUserInfo() async {
@@ -191,29 +298,27 @@ class _ViewInoperativeState extends State<ViewInoperative> {
   }
 
   Widget buildVehicleCard(int index) {
-    int state = buttonStates[index];
     String buttonText;
     Color buttonColor;
 
-    switch (state) {
-      case 0:
-        buttonText = "Iniciar";
-        buttonColor = Colors.grey;
-        break;
-      case 1:
-        buttonText = "Finalizar";
-        buttonColor = Colors.amber;
-        break;
-      case 2:
-        buttonText = "Concluído";
-        buttonColor = Colors.green;
-        break;
-      default:
-        buttonText = "Iniciar";
-        buttonColor = Colors.grey;
+    // Verifica se é a fase atual
+    bool isFaseAtual = faseAtual != null && fasesEnum[faseAtual] == index;
+    // Verifica se é uma fase anterior à atual
+    bool isFaseAnterior = faseAtual != null && fasesEnum[faseAtual]! > index;
+
+    if (isFaseAnterior) {
+      buttonText = "Concluído";
+      buttonColor = Colors.green;
+    } else if (isFaseAtual) {
+      buttonText = "Concluir";
+      buttonColor = Colors.amber;
+    } else {
+      buttonText = "Iniciar";
+      buttonColor = Colors.grey;
     }
 
-    bool isActive = (index == 0) || (buttonStates[index - 1] == 2);
+    bool isActive =
+        index == 0 || (faseAtual != null && fasesEnum[faseAtual]! >= index - 1);
 
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
@@ -244,13 +349,13 @@ class _ViewInoperativeState extends State<ViewInoperative> {
             const SizedBox(height: 12),
             Center(
               child: ElevatedButton(
-                onPressed: (isActive && state < 2)
-                    ? () {
-                        setState(() {
-                          buttonStates[index]++;
-                        });
-                      }
-                    : null,
+                onPressed:
+                    (isActive && !isFaseAnterior && userFuncao == 'supervisor')
+                        ? () {
+                          String proximaFase = 'FASE${index + 2}';
+                          updatePhase(proximaFase);
+                        }
+                        : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: buttonColor,
                   foregroundColor: Colors.white,
@@ -259,8 +364,10 @@ class _ViewInoperativeState extends State<ViewInoperative> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                 ),
                 child: Text(buttonText),
               ),
@@ -272,6 +379,34 @@ class _ViewInoperativeState extends State<ViewInoperative> {
   }
 
   Widget buildAnalistaCard(int index) {
+    // Verifica se é a fase atual
+    bool isFaseAtual = faseAtual != null && fasesEnum[faseAtual] == index;
+    // Verifica se é uma fase anterior à atual
+    bool isFaseAnterior = faseAtual != null && fasesEnum[faseAtual]! > index;
+    // Verifica se o supervisor está na fase de serviço finalizado
+    bool supervisorEmFase3 = faseAtual == 'FASE3';
+
+    // Define o texto e cor do botão baseado no status
+    String buttonText;
+    Color buttonColor;
+
+    if (isFaseAnterior) {
+      buttonText = "Concluído";
+      buttonColor = Colors.green;
+    } else if (isFaseAtual) {
+      buttonText = "Em Andamento";
+      buttonColor = Colors.amber;
+    } else {
+      buttonText = "Aguardando";
+      buttonColor = Colors.grey;
+    }
+
+    // Para a fase 3 (índice 2), configuração especial quando está ativa
+    if (index == 2 && isFaseAtual) {
+      buttonText = "Concluir";
+      buttonColor = Colors.amber;
+    }
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
       elevation: 4,
@@ -286,26 +421,23 @@ class _ViewInoperativeState extends State<ViewInoperative> {
               children: [
                 Text(
                   titlesAnalista[index],
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    color: isFaseAtual ? Colors.black : Colors.black54,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   "Responsável: $userNome",
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black87,
-                  ),
+                  style: const TextStyle(fontSize: 16, color: Colors.black87),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   descriptionsAnalista[index],
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
-                    color: Colors.black,
+                    color: isFaseAtual ? Colors.black : Colors.black54,
                   ),
                 ),
                 const SizedBox(height: 48),
@@ -315,17 +447,26 @@ class _ViewInoperativeState extends State<ViewInoperative> {
               bottom: 0,
               right: 0,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed:
+                    (index == 2 &&
+                            isFaseAtual) // Só habilita o botão na fase 3 quando ativa
+                        ? () {
+                          String proximaFase = 'FASE${index + 2}';
+                          updatePhase(proximaFase);
+                        }
+                        : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: buttonColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(6),
                   ),
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 24, vertical: 12),
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                 ),
-                child: const Text("Concluído"),
+                child: Text(buttonText),
               ),
             ),
           ],

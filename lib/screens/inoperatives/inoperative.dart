@@ -1,23 +1,136 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'viewInoperative.dart';
-import 'package:front_projeto_flutter/components/custom_drawer.dart'; // Importe o CustomDrawer
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:front_projeto_flutter/components/custom_drawer.dart';
 
-class Inoperative extends StatelessWidget {
-  Inoperative({super.key});
+class Inoperative extends StatefulWidget {
+  const Inoperative({super.key});
 
+  @override
+  State<Inoperative> createState() => _InoperativeState();
+}
+
+class _InoperativeState extends State<Inoperative> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  List<dynamic> inoperantes = [];
+  bool isLoading = true;
+  String? searchQuery;
+
+  @override
+  void initState() {
+    super.initState();
+    // Comentando chamada da API e usando dados estáticos
+    // fetchInoperantes();
+    carregarDadosEstaticos();
+  }
+
+  void carregarDadosEstaticos() {
+    // Dados estáticos para teste
+    inoperantes = [
+      {
+        "id": 1,
+        "veiculo": {
+          "placa": "ABC1234",
+          "marca": "Toyota",
+          "modelo": "Corolla",
+          "anoModelo": 2023,
+          "cor": "Prata",
+          "empresa": "Empresa XYZ",
+          "departamento": "Frota Operacional",
+        },
+      },
+      {
+        "id": 2,
+        "veiculo": {
+          "placa": "DEF5678",
+          "marca": "Honda",
+          "modelo": "Civic",
+          "anoModelo": 2022,
+          "cor": "Preto",
+          "empresa": "Empresa ABC",
+          "departamento": "Vendas",
+        },
+      },
+      {
+        "id": 3,
+        "veiculo": {
+          "placa": "GHI9012",
+          "marca": "Volkswagen",
+          "modelo": "Golf",
+          "anoModelo": 2023,
+          "cor": "Branco",
+          "empresa": "Empresa 123",
+          "departamento": "Administrativo",
+        },
+      },
+    ];
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  // Comentando a função de chamada da API
+  /*
+  Future<void> fetchInoperantes() async {
+    try {
+      final token = await _secureStorage.read(key: 'token');
+      final response = await http.get(
+        Uri.parse('http://localhost:3000/inoperative/inoperative'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          inoperantes = data['data'];
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+  */
+
+  void filterInoperantes(String query) {
+    setState(() {
+      searchQuery = query.isEmpty ? null : query.toUpperCase();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Filtrar inoperantes baseado na busca
+    final filteredInoperantes =
+        searchQuery != null
+            ? inoperantes
+                .where(
+                  (inop) => inop['veiculo']['placa'].toString().contains(
+                    searchQuery!,
+                  ),
+                )
+                .toList()
+            : inoperantes;
+
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: const Color.fromARGB(250, 250, 250, 250),
-
       drawer: CustomDrawer(
         headerColor: const Color(0xFF148553),
-        useCustomIcons: true, // Use ícones personalizados
+        useCustomIcons: true,
       ),
-
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -29,21 +142,19 @@ class Inoperative extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: Colors.white, // Círculo branco
+                      color: Colors.white,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(
-                            0.2,
-                          ), // Cor do sombreado
-                          blurRadius: 6, // Intensidade do sombreado
-                          offset: const Offset(2, 2), // Posição do sombreado
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 6,
+                          offset: const Offset(2, 2),
                         ),
                       ],
                     ),
                     child: IconButton(
                       icon: Image.asset(
-                        'lib/assets/images/iconMenu.png', // Caminho para a imagem do ícone de menu
+                        'lib/assets/images/iconMenu.png',
                         width: 24,
                         height: 24,
                       ),
@@ -52,11 +163,11 @@ class Inoperative extends StatelessWidget {
                       },
                     ),
                   ),
-                  // Adicione o segundo ícone ou outros widgets aqui, se necessário
                 ],
               ),
               const SizedBox(height: 20),
 
+              // Card de Busca
               Card(
                 color: Colors.white,
                 elevation: 8,
@@ -93,6 +204,7 @@ class Inoperative extends StatelessWidget {
                       ),
                       const SizedBox(height: 20),
                       TextField(
+                        onChanged: filterInoperantes,
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: const Color(0xFFEEEEEE),
@@ -112,84 +224,118 @@ class Inoperative extends StatelessWidget {
                 ),
               ),
 
-              InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) =>
-                              ViewInoperative(), // Substitua pela sua tela
-                    ),
-                  );
-                },
-                child: Card(
-                  color: Colors.white,
-                  elevation: 8,
-                  shadowColor: Colors.black.withOpacity(0.2),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: const [
-                            Text(
-                              "RDM4J56",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 20,
-                              ),
-                            ),
-                            Text(
-                              "Toyota Corolla XEi 2022",
-                              style: TextStyle(fontSize: 16),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        const Text("Prata", style: TextStyle(fontSize: 14)),
-                        const SizedBox(height: 8),
-                        const Text(
-                          "Logística Express Ltda.",
-                          style: TextStyle(fontSize: 14),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              "Frota Operacional",
-                              style: TextStyle(fontSize: 14),
-                            ),
-                            const SizedBox(width: 16),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 6,
-                                horizontal: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFFAC26).withOpacity(0.7),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Text(
-                                "Inoperante",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
+              const SizedBox(height: 16),
+
+              // Lista de Veículos
+              Expanded(
+                child:
+                    isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : filteredInoperantes.isEmpty
+                        ? const Center(
+                          child: Text('Nenhum veículo inoperante encontrado'),
+                        )
+                        : ListView.builder(
+                          itemCount: filteredInoperantes.length,
+                          itemBuilder: (context, index) {
+                            final inoperante = filteredInoperantes[index];
+                            final veiculo = inoperante['veiculo'];
+
+                            return InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => ViewInoperative(
+                                          inoperanteId: inoperante['id'] as int,
+                                        ),
+                                  ),
+                                );
+                              },
+                              child: Card(
+                                color: Colors.white,
+                                elevation: 8,
+                                shadowColor: Colors.black.withOpacity(0.2),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            veiculo['placa'],
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w900,
+                                              fontSize: 20,
+                                            ),
+                                          ),
+                                          Text(
+                                            "${veiculo['marca']} ${veiculo['modelo']} ${veiculo['anoModelo']}",
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        veiculo['cor'],
+                                        style: const TextStyle(fontSize: 14),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        veiculo['empresa'],
+                                        style: const TextStyle(fontSize: 14),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            veiculo['departamento'],
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 6,
+                                              horizontal: 12,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: const Color(
+                                                0xFFFFAC26,
+                                              ).withOpacity(0.7),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                            ),
+                                            child: const Text(
+                                              "Inoperante",
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
-                      ],
-                    ),
-                  ),
-                ),
               ),
             ],
           ),
@@ -215,13 +361,12 @@ class Inoperative extends StatelessWidget {
               ],
             ),
             child: BottomNavigationBar(
-              currentIndex: 2, // Inoperantes selecionado
+              currentIndex: 2,
               onTap: (index) {
-                // Navegar para a tela correspondente
                 if (index == 0) {
-                  // Navegar para Manutenções
+                  // Manutenções
                 } else if (index == 1) {
-                  // Navegar para Orçamentos
+                  // Orçamentos
                 }
               },
               selectedItemColor: Colors.black,
