@@ -1,68 +1,97 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:front_projeto_flutter/screens/budgets/budgets_page.dart';
 import 'package:front_projeto_flutter/screens/budgets/budgets_listage.dart';
 import 'package:front_projeto_flutter/screens/budgets/budgets_reproval.dart';
+import 'package:front_projeto_flutter/screens/budgets/services/detailsService.dart';
 
-class BudgetsDetails extends StatelessWidget {
-  BudgetsDetails({super.key});
+class BudgetsDetails extends StatefulWidget {
+  final Map<String, dynamic> budgetData;
+  final int budgetId;
 
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  const BudgetsDetails({
+    super.key,
+    required this.budgetData,
+    required this.budgetId,
+  });
+
+  @override
+  State<BudgetsDetails> createState() => _BudgetsDetailsState();
+}
+
+class _BudgetsDetailsState extends State<BudgetsDetails> {
+  // Usar o novo BudgetDetailsService
+  final BudgetDetailsService _budgetDetailsService = BudgetDetailsService();
+  Map<String, dynamic>? _detailedBudget;
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBudgetDetails();
+  }
+
+  Future<void> _fetchBudgetDetails() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      // Chamar o método do novo service
+      final data = await _budgetDetailsService.fetchBudgetDetails(widget.budgetId);
+      setState(() {
+        _detailedBudget = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print("Erro capturado em _fetchBudgetDetails: $e");
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  T _getSafe<T>(Map<String, dynamic>? map, List<String> keys, T defaultValue) {
+    if (map == null) return defaultValue;
+    dynamic current = map;
+    for (String key in keys) {
+      if (current is Map<String, dynamic> && current.containsKey(key)) {
+        current = current[key];
+      } else {
+        return defaultValue;
+      }
+    }
+    if (current is T) {
+      return current;
+    }
+    if (defaultValue is double && current is num) {
+      return current.toDouble() as T;
+    }
+    if (defaultValue is int && current is num) {
+      return current.toInt() as T;
+    }
+    return defaultValue;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final Map<String, dynamic>? dataSource = _detailedBudget ?? widget.budgetData;
+
+    final String nomeMecanica = _getSafe(dataSource, ['oficina', 'nome'], 'Carregando...');
+    final String placaVeiculo = _getSafe(dataSource, ['manutencao', 'veiculo', 'placa'], 'Carregando...');
+    
+    final List<dynamic> produtosApi = _getSafe(_detailedBudget, ['produtos'], []);
+
     return Scaffold(
-      key: _scaffoldKey,
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            UserAccountsDrawerHeader(
-              accountName: const Text('Kelvin'),
-              accountEmail: const Text('Editar minhas informações'),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.grey[200],
-                child: const Icon(Icons.person, size: 40, color: Colors.grey),
-              ),
-              decoration: const BoxDecoration(color: Colors.green),
-            ),
-            _buildDrawerItem(
-              icon: Icons.request_quote,
-              text: 'Orçamentos',
-              onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsPage()));
-                print("Levando para a página de budget page");
-              },
-            ),
-            _buildDrawerItem(icon: Icons.build, text: 'Visualizar manutenções', onTap: () {}),
-            _buildDrawerItem(icon: Icons.warning, text: 'Veículos inoperantes', onTap: () {}),
-            _buildDrawerItem(icon: Icons.bar_chart, text: 'Dashboards', onTap: () {}),
-            _buildDrawerItem(icon: Icons.store, text: 'Mecânicas', onTap: () {}),
-            _buildDrawerItem(icon: Icons.directions_car, text: 'Veículos', onTap: () {}),
-            _buildDrawerItem(icon: Icons.settings, text: 'Configurações', onTap: () {}),
-            _buildDrawerItem(
-              icon: Icons.exit_to_app,
-              text: 'Sair',
-              iconColor: Colors.red,
-              onTap: () {},
-            ),
-          ],
-        ),
-      ),
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
+            Padding( 
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.end, 
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.menu, color: Colors.black),
-                    onPressed: () {
-                      _scaffoldKey.currentState?.openDrawer();
-                    },
-                  ),
                   Stack(
                     children: [
                       IconButton(
@@ -79,7 +108,7 @@ class BudgetsDetails extends StatelessWidget {
                             shape: BoxShape.circle,
                           ),
                           child: const Text(
-                            '3',
+                            '3', 
                             style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -89,7 +118,6 @@ class BudgetsDetails extends StatelessWidget {
                 ],
               ),
             ),
-            // Card Superior com Mecânica e Placa
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Card(
@@ -99,140 +127,129 @@ class BudgetsDetails extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
-                        'TorqueMax Mecânica',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        nomeMecanica,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
-                        'Placa: JDP3H82',
-                        style: TextStyle(fontSize: 16, color: Colors.black54),
+                        'Placa: $placaVeiculo',
+                        style: const TextStyle(fontSize: 16, color: Colors.black54),
+                      ),
+                      const SizedBox(height: 4),
+                      Text( 
+                        'Orçamento ID: ${widget.budgetId}',
+                        style: const TextStyle(fontSize: 14, color: Colors.black45),
                       ),
                     ],
                   ),
                 ),
               ),
             ),
-            // Lista de Produtos
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  _buildCardProduto(
-                    nomeProduto: "Filtro de óleo",
-                    preco: "R\$ 45,90",
-                    descricao: "Filtro de Óleo Bosch Premium OF101 10 cm (altura) x 8 cm (diâmetro)",
-                  ),
-                  const SizedBox(height: 16),
-                  _buildCardProduto(
-                    nomeProduto: "Pneu 175/65",
-                    preco: "R\$ 320,00",
-                    descricao: "Pneu Continental EcoContact 6 - Medida 175/65 R14",
-                  ),
-                  const SizedBox(height: 16),
-                  // Botão "+" centralizado
-                  Center(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        shape: const CircleBorder(),
-                        padding: const EdgeInsets.all(20),
-                        backgroundColor: Colors.green,
-                      ),
-                      onPressed: () {
-                        // Ação de adicionar produto
-                      },
-                      child: const Icon(Icons.add, color: Colors.white, size: 30),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _error != null
+                      ? Center(
+                          child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text("Erro ao carregar produtos:\n$_error", textAlign: TextAlign.center, style: TextStyle(color: Colors.red)),
+                        ))
+                      : produtosApi.isEmpty
+                            ? const Center(child: Text("Nenhum produto atribuído a este orçamento."))
+                            : ListView(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                children: [
+                                  ...produtosApi.map((produtoData) {
+                                    if (produtoData is Map<String, dynamic>) {
+                                      final String nomeProduto = _getSafe(produtoData, ['produto', 'nome'], 'Produto sem nome');
+                                      final double precoProdutoNum = _getSafe(produtoData, ['valorUnitario'], 0.0);
+                                      final String precoProduto = "R\$ ${precoProdutoNum.toStringAsFixed(2)}";
+                                      final String descProduto = _getSafe(produtoData, ['produto', 'descricao'], 'Sem descrição');
+                                      
+                                      return Padding(
+                                        padding: const EdgeInsets.only(bottom:16.0), 
+                                        child: _buildCardProduto(
+                                          nomeProduto: nomeProduto,
+                                          preco: precoProduto,
+                                          descricao: descProduto,
+                                        ),
+                                      );
+                                    }
+                                    return const SizedBox.shrink(); 
+                                  }).toList(),
+                                  const SizedBox(height: 16),
+                                  Center(
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        shape: const CircleBorder(),
+                                        padding: const EdgeInsets.all(20),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                      onPressed: () {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Funcionalidade de adicionar produto a ser implementada.')),
+                                        );
+                                      },
+                                      child: const Icon(Icons.add, color: Colors.white, size: 30),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+                              ),
             ),
-            // Botões Aprovar e Reprovar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
                   Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            // Ação de cancelar
-                            Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsReproval()));
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            'Reprovar',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsReproval(budgetId: widget.budgetId,))); 
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            // Ação de enviar
-                            Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsListage()));
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            'Aprovar',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
+                      child: const Text(
+                        'Reprovar',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(builder: (context) => BudgetsListage()),
+                            (Route<dynamic> route) => false,
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                  // Expanded(
-                  //   child: ElevatedButton(
-                  //     onPressed: () {
-                  //       Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsListage()));
-                  //       print("Levando para a página de budget listage");
-                  //     },
-                  //     style: ElevatedButton.styleFrom(
-                  //       backgroundColor: Colors.green,
-                  //       padding: const EdgeInsets.symmetric(vertical: 16),
-                  //     ),
-                  //     child: const Text(
-                  //       'Aprovar',
-                  //       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  //     ),
-                  //   ),
-                  // ),
-                  // const SizedBox(width: 16),
-                  // Expanded(
-                  //   child: ElevatedButton(
-                  //     onPressed: () {
-                  //       Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsReproval()));
-                  //       print("Levando para a página de budget reproval");
-                  //     },
-                  //     style: ElevatedButton.styleFrom(
-                  //       backgroundColor: Colors.red,
-                  //       padding: const EdgeInsets.symmetric(vertical: 16),
-                  //     ),
-                  //     child: const Text(
-                  //       'Reprovar',
-                  //       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  //     ),
-                  //   ),
-                  // ),
+                      child: const Text(
+                        'Aprovar',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: BottomNavigationBar( 
         items: [
           const BottomNavigationBarItem(
             icon: Icon(Icons.build),
@@ -240,10 +257,10 @@ class BudgetsDetails extends StatelessWidget {
           ),
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
-              'lib/assets/images/_2009906610368.svg',
+              'lib/assets/images/_2009906610368.svg', 
               width: 24,
               height: 24,
-              color: Colors.green,
+              colorFilter: const ColorFilter.mode(Colors.green, BlendMode.srcIn), 
             ),
             label: 'Orçamentos',
           ),
@@ -253,24 +270,17 @@ class BudgetsDetails extends StatelessWidget {
           ),
         ],
         selectedItemColor: Colors.green,
+        currentIndex: 1, 
+        onTap: (index) {
+            if (index == 0) { /* Navegar para Manutenções */ }
+            if (index == 2) { /* Navegar para Inoperante */ }
+        },
       ),
-    );
-  }
-
-  Widget _buildDrawerItem({
-    required IconData icon,
-    required String text,
-    required VoidCallback onTap,
-    Color iconColor = Colors.green,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: iconColor),
-      title: Text(text),
-      onTap: onTap,
     );
   }
 }
 
+// Widget _buildCardProduto (permanece o mesmo da resposta anterior)
 Widget _buildCardProduto({
   required String nomeProduto,
   required String preco,
@@ -286,17 +296,17 @@ Widget _buildCardProduto({
         children: [
           Row(
             children: [
-              Text(
-                nomeProduto,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              Expanded( 
+                child: Text(
+                  nomeProduto,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
               ),
               const SizedBox(width: 8),
               Text(
                 preco,
                 style: const TextStyle(fontSize: 16, color: Colors.green, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(width: 4),
-              const Icon(Icons.open_in_new, size: 16, color: Colors.green),
             ],
           ),
           const SizedBox(height: 8),
@@ -305,12 +315,17 @@ Widget _buildCardProduto({
             style: const TextStyle(fontSize: 14, color: Colors.black54),
           ),
           const SizedBox(height: 8),
-          Align(
+          Align( 
             alignment: Alignment.centerRight,
-            child: Container(
-              decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(8)),
-              padding: const EdgeInsets.all(6),
-              child: const Icon(Icons.close, color: Colors.white, size: 18),
+            child: InkWell(
+              onTap: () {
+                 // Ação de remover produto (futuro)
+              },
+              child: Container(
+                decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.all(6),
+                child: const Icon(Icons.close, color: Colors.white, size: 18),
+              ),
             ),
           ),
         ],
