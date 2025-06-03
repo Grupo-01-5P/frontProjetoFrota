@@ -43,7 +43,7 @@ dependencies:
   latlong2: ^0.9.0     # Para trabalhar com coordenadas geográficas
   geolocator: ^10.0.0 
   geocoding: ^2.1.0
-  
+  mask_text_input_formatter: ^2.7.0
 
 dev_dependencies:
   flutter_test:

@@ -1,5 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:front_projeto_flutter/components/custom_drawer.dart';
+import 'package:front_projeto_flutter/screens/mechanics/mechanics_home_page.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'package:flutter/services.dart';
 
 class NewMechanicPage extends StatefulWidget {
   const NewMechanicPage({Key? key}) : super(key: key);
@@ -11,6 +17,7 @@ class NewMechanicPage extends StatefulWidget {
 class _NewMechanicPageState extends State<NewMechanicPage> {
   final _formKey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final _secureStorage = const FlutterSecureStorage();
 
   bool _autoMessages = true;
 
@@ -23,6 +30,59 @@ class _NewMechanicPageState extends State<NewMechanicPage> {
   final TextEditingController _estadoController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _telefoneController = TextEditingController();
+
+  final _cnpjMaskFormatter = MaskTextInputFormatter(
+    mask: '##.###.###/####-##',
+    filter: {"#": RegExp(r'[0-9]')},
+  );
+
+  Future<void> _cadastrarOficina() async {
+    final token = await _secureStorage.read(key: 'auth_token');
+    final url = Uri.parse('http://localhost:4040/api/garage');
+    final body = jsonEncode({
+      "nome": _nomeController.text,
+      "cnpj": _cnpjMaskFormatter.getUnmaskedText(), // Apenas números
+      "rua": _ruaController.text,
+      "bairro": _bairroController.text,
+      "cidade": _cidadeController.text,
+      "estado": _estadoController.text,
+      "email": _emailController.text,
+      "telefone": _telefoneController.text,
+      "recebeEmail": _autoMessages,
+    });
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: body,
+      );
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        // Sucesso
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Oficina cadastrada com sucesso!')),
+          );
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const MechanicsHomePage()),
+            (route) => false,
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao cadastrar: ${response.body}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro de conexão: $e')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -147,6 +207,7 @@ class _NewMechanicPageState extends State<NewMechanicPage> {
                         _buildTextField(
                           _cnpjController,
                           'Informe o CNPJ da mecânica',
+                          inputFormatters: [_cnpjMaskFormatter],
                         ),
                         _buildSpacer(),
                         _buildLabel('Rua'),
@@ -215,7 +276,7 @@ class _NewMechanicPageState extends State<NewMechanicPage> {
                                 ),
                                 onPressed: () {
                                   if (_formKey.currentState!.validate()) {
-                                    // Salvar ação
+                                    _cadastrarOficina();
                                   }
                                 },
                                 child: const Text('Salvar'),
@@ -242,9 +303,14 @@ class _NewMechanicPageState extends State<NewMechanicPage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String hint, {
+    List<TextInputFormatter>? inputFormatters,
+  }) {
     return TextFormField(
       controller: controller,
+      inputFormatters: inputFormatters,
       decoration: InputDecoration(
         hintText: hint,
         filled: true,

@@ -3,6 +3,7 @@ import 'package:front_projeto_flutter/components/custom_drawer.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:front_projeto_flutter/screens/mechanics/mechanic_detail_page.dart';
 
 class ViewMechanicsPage extends StatefulWidget {
   const ViewMechanicsPage({Key? key}) : super(key: key);
@@ -293,103 +294,119 @@ class _ViewMechanicsPageState extends State<ViewMechanicsPage> {
                                     );
                                   }
                                   final mechanic = filteredMechanics[index];
-                                  return Card(
-                                    elevation: 2,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(12),
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          // Coluna principal
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    Text(
-                                                      mechanic['nome'],
-                                                      style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 16,
+                                  return GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => MechanicDetailPage(
+                                                mechanicId: mechanic['id'],
+                                              ),
+                                        ),
+                                      );
+                                    },
+                                    child: Card(
+                                      elevation: 2,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12),
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // Coluna principal
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Text(
+                                                        mechanic['nome'],
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 16,
+                                                        ),
                                                       ),
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Icon(
-                                                      Icons.open_in_new,
-                                                      color: Colors.green,
-                                                      size: 18,
-                                                    ),
-                                                  ],
-                                                ),
-                                                const SizedBox(height: 2),
-                                                Text(
-                                                  mechanic['telefone'],
-                                                  style: const TextStyle(
-                                                    fontSize: 14,
+                                                      const SizedBox(width: 4),
+                                                      Icon(
+                                                        Icons.open_in_new,
+                                                        color: Colors.green,
+                                                        size: 18,
+                                                      ),
+                                                    ],
                                                   ),
-                                                ),
+                                                  const SizedBox(height: 2),
+                                                  Text(
+                                                    mechanic['telefone'],
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    mechanic['email'],
+                                                    style: const TextStyle(
+                                                      fontSize: 13,
+                                                      color: Colors.black54,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            // Cidade/UF e status
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              children: [
                                                 Text(
-                                                  mechanic['email'],
+                                                  '${mechanic['cidade']}, ${mechanic['estado']}',
                                                   style: const TextStyle(
                                                     fontSize: 13,
-                                                    color: Colors.black54,
+                                                    color: Colors.black87,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 16,
+                                                        vertical: 6,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        mechanic['recebeEmail'] ==
+                                                                true
+                                                            ? const Color(
+                                                              0xFF23C882,
+                                                            )
+                                                            : Colors.red[300],
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          20,
+                                                        ),
+                                                  ),
+                                                  child: Text(
+                                                    mechanic['recebeEmail'] ==
+                                                            true
+                                                        ? 'Ativo'
+                                                        : 'Inativo',
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 13,
+                                                    ),
                                                   ),
                                                 ),
                                               ],
                                             ),
-                                          ),
-                                          // Cidade/UF e status
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.end,
-                                            children: [
-                                              Text(
-                                                '${mechanic['cidade']}, ${mechanic['estado']}',
-                                                style: const TextStyle(
-                                                  fontSize: 13,
-                                                  color: Colors.black87,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 8),
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 16,
-                                                      vertical: 6,
-                                                    ),
-                                                decoration: BoxDecoration(
-                                                  color:
-                                                      mechanic['recebeEmail'] ==
-                                                              true
-                                                          ? const Color(
-                                                            0xFF23C882,
-                                                          )
-                                                          : Colors.red[300],
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                ),
-                                                child: Text(
-                                                  mechanic['recebeEmail'] ==
-                                                          true
-                                                      ? 'Ativo'
-                                                      : 'Inativo',
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 13,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   );
