@@ -41,7 +41,9 @@ class HomePage extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2), // Cor do sombreado
+                          color: Colors.black.withOpacity(
+                            0.2,
+                          ), // Cor do sombreado
                           blurRadius: 6, // Intensidade do sombreado
                           offset: const Offset(2, 2), // Posição do sombreado
                         ),
@@ -61,14 +63,28 @@ class HomePage extends StatelessWidget {
                   // Botão de notificações
                   Stack(
                     children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.notifications,
-                          color: Colors.black,
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 6,
+                              offset: const Offset(2, 2),
+                            ),
+                          ],
                         ),
-                        onPressed: () {
-                          // Ação para notificações
-                        },
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.notifications,
+                            color: Colors.black,
+                          ),
+                          onPressed: () {
+                            // Ação para notificações
+                          },
+                        ),
                       ),
                       Positioned(
                         right: 8,

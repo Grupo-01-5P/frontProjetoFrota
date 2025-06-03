@@ -151,7 +151,7 @@ class _ManutencaoDetailScreenState extends State<ManutencaoDetailScreen> {
         return;
       }
 
-      final url = Uri.parse('http://localhost:4040/api/maintenence/${widget.manutencao['id']}/aprovar');
+      final url = Uri.parse('http://localhost:4040/api/maintenance/${widget.manutencao['id']}/aprovar');
       
       final response = await http.patch(
         url,
@@ -216,7 +216,7 @@ class _ManutencaoDetailScreenState extends State<ManutencaoDetailScreen> {
         return;
       }
 
-      final url = Uri.parse('http://localhost:4040/api/maintenence/${widget.manutencao['id']}/reprovar');
+      final url = Uri.parse('http://localhost:4040/api/maintenance/${widget.manutencao['id']}/reprovar');
       
       final response = await http.patch(
         url,

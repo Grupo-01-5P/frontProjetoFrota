@@ -4,6 +4,7 @@ import 'package:front_projeto_flutter/screens/home_page.dart';
 import 'package:front_projeto_flutter/screens/inoperative.dart';
 import 'package:front_projeto_flutter/screens/login_page.dart';
 import 'package:front_projeto_flutter/screens/maintenences/firstPage.dart';
+import 'package:front_projeto_flutter/screens/mechanics/mechanics_home_page.dart';
 
 class CustomDrawer extends StatefulWidget {
   final Color headerColor;
@@ -261,14 +262,11 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 imageAsset: 'lib/assets/images/iconMecanica.png',
                 text: 'Mecânicas',
                 onTap: () {
-                  Navigator.pop(context); // Fechar o drawer
-
-                  // Navegação para a tela de mecânicas
-                  // Quando implementada, substitua este código:
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Funcionalidade em desenvolvimento'),
-                      duration: Duration(seconds: 2),
+                  Navigator.pop(context); // Fecha o Drawer
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MechanicsHomePage(),
                     ),
                   );
                 },
@@ -277,14 +275,11 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 icon: Icons.store,
                 text: 'Mecânicas',
                 onTap: () {
-                  Navigator.pop(context); // Fechar o drawer
-
-                  // Navegação para a tela de mecânicas
-                  // Quando implementada, substitua este código:
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Funcionalidade em desenvolvimento'),
-                      duration: Duration(seconds: 2),
+                  Navigator.pop(context); // Fecha o Drawer
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MechanicsHomePage(),
                     ),
                   );
                 },
@@ -368,17 +363,16 @@ class _CustomDrawerState extends State<CustomDrawer> {
               ? _buildDrawerItemWithImage(
                 imageAsset: 'lib/assets/images/iconExit.png',
                 text: 'Sair',
-                onTap: () => {
-                  _handleLogout(context)
-                },
+                onTap: () => {_handleLogout(context)},
               )
               : _buildDrawerItemWithIcon(
                 icon: Icons.exit_to_app,
                 text: 'Sair',
                 iconColor: Colors.red,
-                onTap: () => {
-                  _handleLogout(context), // Chama o método de logout
-                },
+                onTap:
+                    () => {
+                      _handleLogout(context), // Chama o método de logout
+                    },
               ),
         ],
       ),
@@ -387,62 +381,62 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
   // Método para lidar com o logout
   void _handleLogout(BuildContext context) {
-  // Armazenar uma referência ao contexto fora do escopo do dialog
-  final navigatorContext = Navigator.of(context);
-  
-  // Fechar o drawer
-  Navigator.pop(context);
+    // Armazenar uma referência ao contexto fora do escopo do dialog
+    final navigatorContext = Navigator.of(context);
 
-  // Mostrar diálogo de confirmação
-  showDialog(
-    context: context,
-    builder: (BuildContext dialogContext) {
-      return AlertDialog(
-        title: const Text('Confirmação'),
-        content: const Text('Tem certeza que deseja sair?'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop(); // Apenas fecha o diálogo
-            },
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () async {
-              try {
-                // Limpar o token e informações do usuário
-                final secureStorage = const FlutterSecureStorage();
-                await secureStorage.deleteAll();
-                
-                // Fechar o diálogo
-                Navigator.of(dialogContext).pop();
-                
-                // Pequeno atraso para garantir que o diálogo feche completamente
-                await Future.delayed(const Duration(milliseconds: 100));
-                
-                // Usar o navigatorContext capturado anteriormente
-                navigatorContext.pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => LoginPage()),
-                  (route) => false, // Remove todas as rotas anteriores
-                );
-              } catch (e) {
-                print('Erro ao fazer logout: $e');
-                // Tentar mostrar erro de forma segura
-                if (dialogContext.mounted) {
+    // Fechar o drawer
+    Navigator.pop(context);
+
+    // Mostrar diálogo de confirmação
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Confirmação'),
+          content: const Text('Tem certeza que deseja sair?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); // Apenas fecha o diálogo
+              },
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () async {
+                try {
+                  // Limpar o token e informações do usuário
+                  final secureStorage = const FlutterSecureStorage();
+                  await secureStorage.deleteAll();
+
+                  // Fechar o diálogo
                   Navigator.of(dialogContext).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Erro ao fazer logout: $e')),
+
+                  // Pequeno atraso para garantir que o diálogo feche completamente
+                  await Future.delayed(const Duration(milliseconds: 100));
+
+                  // Usar o navigatorContext capturado anteriormente
+                  navigatorContext.pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => LoginPage()),
+                    (route) => false, // Remove todas as rotas anteriores
                   );
+                } catch (e) {
+                  print('Erro ao fazer logout: $e');
+                  // Tentar mostrar erro de forma segura
+                  if (dialogContext.mounted) {
+                    Navigator.of(dialogContext).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Erro ao fazer logout: $e')),
+                    );
+                  }
                 }
-              }
-            },
-            child: const Text('Sair'),
-          ),
-        ],
-      );
-    },
-  );
-}
+              },
+              child: const Text('Sair'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   // Widget para item do menu com ícone
   Widget _buildDrawerItemWithIcon({
