@@ -6,17 +6,41 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 // Classe modelo para veículos
 class Veiculo {
-  final String id;
+  final int id;
   final String placa;
+  final String marca;
   final String modelo;
+  final int anoFabricacao;
+  final int anoModelo;
+  final String cor;
+  final String tipoVeiculo;
   bool selecionado;
 
   Veiculo({
     required this.id,
     required this.placa,
+    required this.marca,
     required this.modelo,
+    required this.anoFabricacao,
+    required this.anoModelo,
+    required this.cor,
+    required this.tipoVeiculo,
     this.selecionado = false,
   });
+
+  factory Veiculo.fromJson(Map<String, dynamic> json) {
+    return Veiculo(
+      id: json['id'],
+      placa: json['placa'],
+      marca: json['marca'],
+      modelo: json['modelo'],
+      anoFabricacao: json['anoFabricacao'],
+      anoModelo: json['anoModelo'],
+      cor: json['cor'],
+      tipoVeiculo: json['tipoVeiculo'],
+      selecionado: false,
+    );
+  }
 }
 
 // Nova tela para cadastro de usuário
@@ -41,12 +65,14 @@ class _CadastrarUsuarioScreenState extends State<CadastrarUsuarioScreen> {
   
   String _funcaoSelecionada = 'supervisor'; // Valor padrão
   bool _isLoading = false;
+  bool _isLoadingVeiculos = false;
   String? _errorMessage;
+  String? _errorMessageVeiculos;
   
   // Lista de opções para o dropdown de função
   final List<String> _opcoesFuncao = ['supervisor', 'analista'];
   
-  // Lista de veículos fixos (mock) - simulando uma base grande
+  // Lista de veículos da API
   List<Veiculo> _todosVeiculos = [];
   List<Veiculo> _veiculosFiltrados = [];
   List<Veiculo> _veiculosSelecionados = [];
@@ -54,40 +80,64 @@ class _CadastrarUsuarioScreenState extends State<CadastrarUsuarioScreen> {
   @override
   void initState() {
     super.initState();
-    _gerarVeiculosMock();
-    _veiculosFiltrados = List.from(_todosVeiculos);
+    _carregarVeiculosSemSupervisor();
   }
   
-  // Gerar veículos mock para simular uma base grande
-  void _gerarVeiculosMock() {
-    // Modelos de caminhões comuns
-    List<String> modelos = [
-      'Mercedes-Benz Actros',
-      'Volvo FH',
-      'Scania R450',
-      'MAN TGX',
-      'DAF XF',
-      'Iveco Stralis',
-      'Ford Cargo',
-      'Volkswagen Constellation',
-      'Renault T',
-      'Hyundai Xcient',
-    ];
-    
-    // Gerar 300 veículos com placas e modelos diferentes
-    for (int i = 1; i <= 300; i++) {
-      String modeloIndex = (i % modelos.length).toString();
-      String placa = 'ABC${i.toString().padLeft(4, '0')}';
-      String modelo = modelos[i % modelos.length];
+  // Carregar veículos sem supervisor da API
+  Future<void> _carregarVeiculosSemSupervisor() async {
+    setState(() {
+      _isLoadingVeiculos = true;
+      _errorMessageVeiculos = null;
+    });
+
+    try {
+      // Obter o token de autenticação
+      final token = await _secureStorage.read(key: 'auth_token');
       
-      _todosVeiculos.add(
-        Veiculo(
-          id: i.toString(),
-          placa: placa,
-          modelo: '$modelo - $modeloIndex',
-          selecionado: false,
-        ),
+      if (token == null) {
+        setState(() {
+          _errorMessageVeiculos = 'Token de autenticação não encontrado';
+          _isLoadingVeiculos = false;
+        });
+        return;
+      }
+
+      // Fazer a requisição para buscar veículos sem supervisor
+      final response = await http.get(
+        Uri.parse('http://localhost:4040/api/veiculos/withoutSupervisior?_page=1&_limit=200'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
       );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        setState(() {
+          _todosVeiculos = (data['data'] as List)
+              .map((veiculoJson) => Veiculo.fromJson(veiculoJson))
+              .toList();
+          _veiculosFiltrados = List.from(_todosVeiculos);
+          _isLoadingVeiculos = false;
+        });
+      } else if (response.statusCode == 401) {
+        setState(() {
+          _errorMessageVeiculos = 'Sessão expirada, faça login novamente';
+          _isLoadingVeiculos = false;
+        });
+      } else {
+        setState(() {
+          _errorMessageVeiculos = 'Erro ao carregar veículos: ${response.statusCode}';
+          _isLoadingVeiculos = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessageVeiculos = 'Erro de conexão ao carregar veículos: $e';
+        _isLoadingVeiculos = false;
+      });
+      print('Erro ao carregar veículos: $e');
     }
   }
   
@@ -100,7 +150,8 @@ class _CadastrarUsuarioScreenState extends State<CadastrarUsuarioScreen> {
         pesquisa = pesquisa.toLowerCase();
         _veiculosFiltrados = _todosVeiculos.where((veiculo) {
           return veiculo.placa.toLowerCase().contains(pesquisa) ||
-              veiculo.modelo.toLowerCase().contains(pesquisa);
+              veiculo.modelo.toLowerCase().contains(pesquisa) ||
+              veiculo.marca.toLowerCase().contains(pesquisa);
         }).toList();
       }
     });
@@ -205,7 +256,7 @@ class _CadastrarUsuarioScreenState extends State<CadastrarUsuarioScreen> {
       
       // Se for supervisor, adicionar veículos selecionados
       if (_funcaoSelecionada == 'supervisor' && _veiculosSelecionados.isNotEmpty) {
-        List<String> veiculosIds = _veiculosSelecionados.map((v) => v.id).toList();
+        List<int> veiculosIds = _veiculosSelecionados.map((v) => v.id).toList();
         userData['veiculos'] = veiculosIds;
       }
       
@@ -520,11 +571,40 @@ class _CadastrarUsuarioScreenState extends State<CadastrarUsuarioScreen> {
                   ),
                   const SizedBox(height: 8),
                   
+                  // Mensagem de erro ao carregar veículos
+                  if (_errorMessageVeiculos != null)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(10),
+                      margin: const EdgeInsets.only(bottom: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.warning, color: Colors.orange.shade800, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _errorMessageVeiculos!,
+                              style: TextStyle(color: Colors.orange.shade800),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: _carregarVeiculosSemSupervisor,
+                            child: const Text('Tentar novamente'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  
                   // Campo de pesquisa de veículos
                   TextFormField(
                     controller: _pesquisaVeiculoController,
+                    enabled: !_isLoadingVeiculos,
                     decoration: InputDecoration(
-                      hintText: 'Pesquisar veículos por placa ou modelo...',
+                      hintText: 'Pesquisar veículos por placa, marca ou modelo...',
                       prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -560,7 +640,7 @@ class _CadastrarUsuarioScreenState extends State<CadastrarUsuarioScreen> {
                           return Chip(
                             backgroundColor: Colors.green.shade100,
                             label: Text(
-                              '${veiculo.placa} - ${veiculo.modelo}',
+                              '${veiculo.placa} - ${veiculo.marca} ${veiculo.modelo}',
                               style: const TextStyle(fontSize: 12),
                             ),
                             deleteIcon: const Icon(
@@ -582,53 +662,75 @@ class _CadastrarUsuarioScreenState extends State<CadastrarUsuarioScreen> {
                       border: Border.all(color: Colors.grey.shade300),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: _veiculosFiltrados.isEmpty
+                    child: _isLoadingVeiculos
                         ? const Center(
-                            child: Text(
-                              'Nenhum veículo encontrado',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
+                            child: CircularProgressIndicator(),
                           )
-                        : ListView.builder(
-                            itemCount: _veiculosFiltrados.length,
-                            itemBuilder: (context, index) {
-                              final veiculo = _veiculosFiltrados[index];
-                              return ListTile(
-                                dense: true,
-                                title: Text(
-                                  veiculo.modelo,
-                                  style: const TextStyle(fontSize: 14),
+                        : _veiculosFiltrados.isEmpty
+                            ? Center(
+                                child: Text(
+                                  _todosVeiculos.isEmpty
+                                      ? 'Nenhum veículo sem supervisor disponível'
+                                      : 'Nenhum veículo encontrado com esta pesquisa',
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontStyle: FontStyle.italic,
+                                  ),
                                 ),
-                                subtitle: Text(
-                                  'Placa: ${veiculo.placa}',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                                leading: Checkbox(
-                                  value: veiculo.selecionado,
-                                  onChanged: (bool? value) {
-                                    _alternarSelecaoVeiculo(veiculo);
-                                  },
-                                  activeColor: const Color(0xFF0C7E3D),
-                                ),
-                                onTap: () => _alternarSelecaoVeiculo(veiculo),
-                              );
-                            },
-                          ),
+                              )
+                            : ListView.builder(
+                                itemCount: _veiculosFiltrados.length,
+                                itemBuilder: (context, index) {
+                                  final veiculo = _veiculosFiltrados[index];
+                                  return ListTile(
+                                    dense: true,
+                                    title: Text(
+                                      '${veiculo.marca} ${veiculo.modelo}',
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
+                                    subtitle: Text(
+                                      'Placa: ${veiculo.placa} | ${veiculo.tipoVeiculo.toUpperCase()} | ${veiculo.cor}',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                    trailing: Text(
+                                      '${veiculo.anoFabricacao}/${veiculo.anoModelo}',
+                                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                    ),
+                                    leading: Checkbox(
+                                      value: veiculo.selecionado,
+                                      onChanged: (bool? value) {
+                                        _alternarSelecaoVeiculo(veiculo);
+                                      },
+                                      activeColor: const Color(0xFF0C7E3D),
+                                    ),
+                                    onTap: () => _alternarSelecaoVeiculo(veiculo),
+                                  );
+                                },
+                              ),
                   ),
                   
-                  // Contador de veículos selecionados
+                  // Contador de veículos
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text(
-                      '${_veiculosSelecionados.length} veículos selecionados',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade700,
-                        fontStyle: FontStyle.italic,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${_veiculosSelecionados.length} veículo(s) selecionado(s)',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade700,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                        Text(
+                          'Total disponível: ${_todosVeiculos.length}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -698,4 +800,3 @@ class _CadastrarUsuarioScreenState extends State<CadastrarUsuarioScreen> {
     );
   }
 }
-                          

@@ -331,6 +331,7 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
                                         MaterialPageRoute(
                                           builder: (context) => ManutencaoDetailScreen(
                                             manutencao: manutencao,
+                                            oficina: manutencao['oficina'],
                                           ),
                                         ),
                                       );
@@ -459,6 +460,7 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
                                                   MaterialPageRoute(
                                                     builder: (context) => ManutencaoDetailScreen(
                                                       manutencao: manutencao,
+                                                      oficina: manutencao['oficina'],
                                                     ),
                                                   ),
                                                 );

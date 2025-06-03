@@ -9,41 +9,49 @@ import 'package:geocoding/geocoding.dart';
 
 class ManutencaoDetailScreenSupervisor extends StatefulWidget {
   final dynamic manutencao;
+  final dynamic oficina;
 
   const ManutencaoDetailScreenSupervisor({
     Key? key,
     required this.manutencao,
+    this.oficina,
   }) : super(key: key);
 
   @override
-  _ManutencaoDetailScreenSupervisorState createState() => _ManutencaoDetailScreenSupervisorState();
+  _ManutencaoDetailScreenSupervisorState createState() =>
+      _ManutencaoDetailScreenSupervisorState();
 }
 
-class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScreenSupervisor> {
+class _ManutencaoDetailScreenSupervisorState
+    extends State<ManutencaoDetailScreenSupervisor> {
   final _secureStorage = const FlutterSecureStorage();
   final _motivoController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
   String? _successMessage;
   final MapController _mapController = MapController();
-  
+
   // Variáveis para armazenar dados de localização
   String _enderecoCompleto = 'Carregando endereço...';
   bool _isLoadingAddress = true;
-  
+
+  dynamic _oficinasSelecionada;
+
   @override
   void initState() {
     super.initState();
-    // Obter o endereço a partir das coordenadas quando a tela é iniciada
+    if (widget.manutencao['oficina'] != null) {
+      _oficinasSelecionada = widget.manutencao['oficina'];
+    }
     _obterEndereco();
   }
-  
+
   // Função para obter o endereço a partir de latitude e longitude
   Future<void> _obterEndereco() async {
-    final bool hasCoordinates = 
-        widget.manutencao['latitude'] != null && 
+    final bool hasCoordinates =
+        widget.manutencao['latitude'] != null &&
         widget.manutencao['longitude'] != null;
-    
+
     if (!hasCoordinates) {
       setState(() {
         _enderecoCompleto = 'Localização não disponível';
@@ -51,11 +59,11 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
       });
       return;
     }
-    
+
     // Converter coordenadas para double
     final latitude = double.tryParse(widget.manutencao['latitude']) ?? 0.0;
     final longitude = double.tryParse(widget.manutencao['longitude']) ?? 0.0;
-    
+
     if (latitude == 0.0 && longitude == 0.0) {
       setState(() {
         _enderecoCompleto = 'Coordenadas inválidas';
@@ -63,48 +71,54 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
       });
       return;
     }
-    
+
     try {
       // Usar o pacote geocoding para fazer a geocodificação reversa
       print('Coordenadas: $latitude, $longitude');
-      List<Placemark> placemarks = await placemarkFromCoordinates(latitude, longitude);
-      
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        latitude,
+        longitude,
+      );
+
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
         String endereco = '';
-        
+
         // Compor o endereço com as informações disponíveis
         if (place.street != null && place.street!.isNotEmpty) {
           endereco += place.street!;
         }
-        
+
         if (place.subLocality != null && place.subLocality!.isNotEmpty) {
           if (endereco.isNotEmpty) endereco += ', ';
           endereco += place.subLocality!;
         }
-        
-        if (place.subAdministrativeArea != null && place.subAdministrativeArea!.isNotEmpty) {
+
+        if (place.subAdministrativeArea != null &&
+            place.subAdministrativeArea!.isNotEmpty) {
           if (endereco.isNotEmpty) endereco += ', ';
           endereco += place.subAdministrativeArea!;
         }
-        
+
         if (place.locality != null && place.locality!.isNotEmpty) {
           if (endereco.isNotEmpty) endereco += ', ';
           endereco += place.locality!;
         }
-        
-        if (place.administrativeArea != null && place.administrativeArea!.isNotEmpty) {
+
+        if (place.administrativeArea != null &&
+            place.administrativeArea!.isNotEmpty) {
           if (endereco.isNotEmpty) endereco += ', ';
           endereco += place.administrativeArea!;
         }
-        
+
         if (place.postalCode != null && place.postalCode!.isNotEmpty) {
           if (endereco.isNotEmpty) endereco += ' - ';
           endereco += 'CEP: ' + place.postalCode!;
         }
-        
+
         setState(() {
-          _enderecoCompleto = endereco.isNotEmpty ? endereco : 'Endereço não encontrado';
+          _enderecoCompleto =
+              endereco.isNotEmpty ? endereco : 'Endereço não encontrado';
           _isLoadingAddress = false;
         });
       } else {
@@ -121,7 +135,7 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
       });
     }
   }
-  
+
   // Função para formatar a data
   String _formatDate(String dateString) {
     try {
@@ -130,191 +144,6 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
     } catch (e) {
       return dateString;
     }
-  }
-
-  // Função para aprovar manutenção
-  Future<void> _aprovarManutencao() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-      _successMessage = null;
-    });
-
-    try {
-      final token = await _secureStorage.read(key: 'auth_token');
-      
-      if (token == null) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
-        });
-        return;
-      }
-
-      final url = Uri.parse('http://localhost:4040/api/maintenence/${widget.manutencao['id']}/aprovar');
-      
-      final response = await http.patch(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 204) {
-        setState(() {
-          _isLoading = false;
-          _successMessage = 'Manutenção aprovada com sucesso!';
-        });
-        
-        Future.delayed(const Duration(seconds: 2), () {
-          Navigator.pop(context, true);
-        });
-      } else if (response.statusCode == 401) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
-        });
-      } else {
-        try {
-          final errorData = jsonDecode(response.body);
-          setState(() {
-            _isLoading = false;
-            _errorMessage = errorData['error'] ?? 'Erro ao aprovar manutenção.';
-          });
-        } catch (e) {
-          setState(() {
-            _isLoading = false;
-            _errorMessage = 'Erro ao aprovar manutenção: ${response.statusCode}';
-          });
-        }
-      }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'Erro de conexão: ${e.toString()}';
-      });
-    }
-  }
-
-  // Função para reprovar manutenção
-  Future<void> _reprovarManutencao(String motivo) async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-      _successMessage = null;
-    });
-
-    try {
-      final token = await _secureStorage.read(key: 'auth_token');
-      
-      if (token == null) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
-        });
-        return;
-      }
-
-      final url = Uri.parse('http://localhost:4040/api/maintenence/${widget.manutencao['id']}/reprovar');
-      
-      final response = await http.patch(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'motivoReprovacao': motivo}),
-      );
-
-      if (response.statusCode == 204) {
-        setState(() {
-          _isLoading = false;
-          _successMessage = 'Manutenção reprovada com sucesso!';
-        });
-        
-        Future.delayed(const Duration(seconds: 2), () {
-          Navigator.pop(context, true);
-        });
-      } else if (response.statusCode == 401) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
-        });
-      } else {
-        try {
-          final errorData = jsonDecode(response.body);
-          setState(() {
-            _isLoading = false;
-            _errorMessage = errorData['error'] ?? 'Erro ao reprovar manutenção.';
-          });
-        } catch (e) {
-          setState(() {
-            _isLoading = false;
-            _errorMessage = 'Erro ao reprovar manutenção: ${response.statusCode}';
-          });
-        }
-      }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'Erro de conexão: ${e.toString()}';
-      });
-    }
-  }
-
-  // Função para mostrar diálogo de reprovação
-  void _mostrarDialogoReprovacao() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Reprovar Manutenção'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Por favor, informe o motivo da reprovação:'),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _motivoController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  hintText: 'Digite o motivo da reprovação',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              child: const Text('Cancelar'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
-              child: const Text('Reprovar', style: TextStyle(color: Colors.white),),
-              onPressed: () {
-                if (_motivoController.text.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Por favor, informe o motivo da reprovação.'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                  return;
-                }
-                Navigator.of(context).pop();
-                _reprovarManutencao(_motivoController.text.trim());
-              },
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -326,18 +155,22 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
   @override
   Widget build(BuildContext context) {
     final veiculo = widget.manutencao['veiculo'];
-    
+
     // Verificar se existem coordenadas
-    final bool hasCoordinates = 
-        widget.manutencao['latitude'] != null && 
+    final bool hasCoordinates =
+        widget.manutencao['latitude'] != null &&
         widget.manutencao['longitude'] != null;
-    
+
     // Converter coordenadas para double (se existirem)
-    final latitude = hasCoordinates ? 
-        double.tryParse(widget.manutencao['latitude'].toString()) ?? 0.0 : 0.0;
-    final longitude = hasCoordinates ? 
-        double.tryParse(widget.manutencao['longitude'].toString()) ?? 0.0 : 0.0;
-    
+    final latitude =
+        hasCoordinates
+            ? double.tryParse(widget.manutencao['latitude'].toString()) ?? 0.0
+            : 0.0;
+    final longitude =
+        hasCoordinates
+            ? double.tryParse(widget.manutencao['longitude'].toString()) ?? 0.0
+            : 0.0;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -378,7 +211,7 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
                       style: TextStyle(color: Colors.red[900]),
                     ),
                   ),
-                
+
                 if (_successMessage != null)
                   Container(
                     width: double.infinity,
@@ -393,7 +226,7 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
                       style: TextStyle(color: Colors.green[900]),
                     ),
                   ),
-                
+
                 // Informações do veículo
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -451,7 +284,10 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
                       const SizedBox(height: 8),
                       // Status da manutenção
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: _getStatusColor(widget.manutencao['status']),
                           borderRadius: BorderRadius.circular(20),
@@ -467,7 +303,7 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
                     ],
                   ),
                 ),
-                
+
                 // Descrição do problema
                 Container(
                   width: double.infinity,
@@ -484,13 +320,14 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        widget.manutencao['descricaoProblema'] ?? 'Sem descrição do problema',
+                        widget.manutencao['descricaoProblema'] ??
+                            'Sem descrição do problema',
                         style: const TextStyle(fontSize: 16),
                       ),
                     ],
                   ),
                 ),
-                
+
                 // Mapa com OpenStreetMap
                 Container(
                   height: 250,
@@ -501,58 +338,61 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: hasCoordinates
-                        ? FlutterMap(
-                            mapController: _mapController,
-                            options: MapOptions(
-                              center: LatLng(latitude, longitude),
-                              zoom: 15,
-                              interactiveFlags: InteractiveFlag.all,
-                            ),
-                            children: [
-                              TileLayer(
-                                urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                                userAgentPackageName: 'com.example.app',
+                    child:
+                        hasCoordinates
+                            ? FlutterMap(
+                              mapController: _mapController,
+                              options: MapOptions(
+                                center: LatLng(latitude, longitude),
+                                zoom: 15,
+                                interactiveFlags: InteractiveFlag.all,
                               ),
-                              MarkerLayer(
-                                markers: [
-                                  Marker(
-                                    point: LatLng(latitude, longitude),
-                                    width: 80,
-                                    height: 80,
-                                    builder: (context) => const Icon(
-                                      Icons.location_on,
-                                      color: Colors.red,
-                                      size: 40,
+                              children: [
+                                TileLayer(
+                                  urlTemplate:
+                                      "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                                  userAgentPackageName: 'com.example.app',
+                                ),
+                                MarkerLayer(
+                                  markers: [
+                                    Marker(
+                                      point: LatLng(latitude, longitude),
+                                      width: 80,
+                                      height: 80,
+                                      builder:
+                                          (context) => const Icon(
+                                            Icons.location_on,
+                                            color: Colors.red,
+                                            size: 40,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            )
+                            : Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  Icon(
+                                    Icons.location_off,
+                                    size: 48,
+                                    color: Colors.grey,
+                                  ),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'Localização não disponível',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey,
                                     ),
                                   ),
                                 ],
                               ),
-                            ],
-                          )
-                        : Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Icon(
-                                  Icons.location_off,
-                                  size: 48,
-                                  color: Colors.grey,
-                                ),
-                                SizedBox(height: 16),
-                                Text(
-                                  'Localização não disponível',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
                             ),
-                          ),
                   ),
                 ),
-                
+
                 // Endereço em vez das coordenadas
                 if (hasCoordinates)
                   Padding(
@@ -571,7 +411,11 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
                               children: [
                                 Row(
                                   children: [
-                                    const Icon(Icons.location_on, size: 16, color: Colors.red),
+                                    const Icon(
+                                      Icons.location_on,
+                                      size: 16,
+                                      color: Colors.red,
+                                    ),
                                     const SizedBox(width: 4),
                                     const Text(
                                       'Localização:',
@@ -583,13 +427,13 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
                                     const Spacer(),
                                     _isLoadingAddress
                                         ? const SizedBox(
-                                            width: 12,
-                                            height: 12,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              color: Colors.blue,
-                                            ),
-                                          )
+                                          width: 12,
+                                          height: 12,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.blue,
+                                          ),
+                                        )
                                         : const SizedBox(),
                                   ],
                                 ),
@@ -605,9 +449,9 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
                       ],
                     ),
                   ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Data e Horário
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -625,12 +469,19 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
                               ],
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.grey[200],
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Text(_formatDate(widget.manutencao['dataSolicitacao'])),
+                              child: Text(
+                                _formatDate(
+                                  widget.manutencao['dataSolicitacao'],
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -648,14 +499,19 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
                               ],
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.grey[200],
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 DateFormat('HH:mm').format(
-                                  DateTime.parse(widget.manutencao['dataSolicitacao'])
+                                  DateTime.parse(
+                                    widget.manutencao['dataSolicitacao'],
+                                  ),
                                 ),
                               ),
                             ),
@@ -665,9 +521,57 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
                     ],
                   ),
                 ),
-                
+                SizedBox(height: 20),
+                if (_oficinasSelecionada != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue.shade200),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Oficina Selecionada:',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _oficinasSelecionada['nome'] ??
+                                'Nome não disponível',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          Text(
+                            '${_oficinasSelecionada['rua'] ?? ''}, ${_oficinasSelecionada['bairro'] ?? ''}',
+                          ),
+                          Text(
+                            '${_oficinasSelecionada['cidade'] ?? ''} - ${_oficinasSelecionada['estado'] ?? ''}',
+                          ),
+                          Text(
+                            'Tel: ${_oficinasSelecionada['telefone'] ?? 'Não informado'}',
+                          ),
+                          Text(
+                            'Email: ${_oficinasSelecionada['email'] ?? 'Não informado'}',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 // Motivo da reprovação (se aplicável)
-                if (widget.manutencao['status']?.toLowerCase() == 'reprovada' && 
+                if (widget.manutencao['status']?.toLowerCase() == 'reprovada' &&
                     widget.manutencao['motivoReprovacao'] != null)
                   Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -695,66 +599,18 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
                       ),
                     ),
                   ),
-                
-                // Botões de ação (apenas mostrar se o status for pendente)
-                (widget.manutencao['status']?.toLowerCase() == 'pendente')
-                    ? Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red[400],
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                ),
-                                onPressed: _isLoading ? null : _mostrarDialogoReprovacao,
-                                child: const Text(
-                                  'Reprovar',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                ),
-                                onPressed: _isLoading ? null : _aprovarManutencao,
-                                child: const Text(
-                                  'Aprovar',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : const SizedBox(height: 16),
-                
+
                 const SizedBox(height: 24),
               ],
             ),
           ),
-          
+
           // Indicador de carregamento
           if (_isLoading)
             Container(
               color: Colors.black54,
               child: const Center(
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                ),
+                child: CircularProgressIndicator(color: Colors.white),
               ),
             ),
         ],
@@ -765,7 +621,7 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
   // Função para obter cor baseada no status
   Color _getStatusColor(String? status) {
     if (status == null) return Colors.grey;
-    
+
     switch (status.toLowerCase()) {
       case 'pendente':
         return Colors.orange;
@@ -779,7 +635,7 @@ class _ManutencaoDetailScreenSupervisorState extends State<ManutencaoDetailScree
         return Colors.grey;
     }
   }
-  
+
   // Função para obter texto do status
   String _getStatusText(String status) {
     switch (status.toLowerCase()) {
