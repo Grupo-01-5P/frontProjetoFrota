@@ -24,4 +24,35 @@ class BudgetDetailsService {
           'Erro ao buscar detalhes do orçamento (BudgetDetailsService): $e');
     }
   }
+
+  final String _orcamentoProdutosBaseUrl = 'http://localhost:3001/orcamento';
+
+  Future<void> removeProductFromBudget(int orcamentoProdutoId) async {
+    // orcamentoProdutoId é o ID da entrada específica do produto NAQUELE orçamento
+    // (o 'id' que está dentro de cada objeto na lista 'produtos' do orçamento)
+    final String deleteUrl = '$_orcamentoProdutosBaseUrl/$orcamentoProdutoId';
+
+    print("Removendo produto do orçamento (BudgetDetailsService) em: $deleteUrl");
+
+    try {
+      final response = await http.delete(
+        Uri.parse(deleteUrl),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 204) { // 204 No Content também é sucesso para DELETE
+        print('Produto removido do orçamento com sucesso.');
+      } else {
+        throw Exception(
+            'Falha ao remover produto do orçamento: ${response.statusCode}, Body: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception(
+          'Erro ao remover produto do orçamento: $e');
+    }
+  }
 }
+
+  
