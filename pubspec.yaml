@@ -45,7 +45,7 @@ dependencies:
   geocoding: ^3.0.0
   jwt_decoder: ^2.0.1
   location_geocoder: ^1.0.5
-  
+  mask_text_input_formatter: ^2.7.0
 
 dev_dependencies:
   flutter_test:
