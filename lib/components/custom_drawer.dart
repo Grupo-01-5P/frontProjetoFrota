@@ -7,6 +7,7 @@ import 'package:front_projeto_flutter/screens/maintenences/firstPage.dart';
 import 'package:front_projeto_flutter/screens/supervisor/maintenences/firstPage.dart';
 import 'package:front_projeto_flutter/screens/supervisor/maintenences/manutencao_detalhe.dart';
 import 'package:front_projeto_flutter/screens/users/firstPage.dart';
+import 'package:front_projeto_flutter/screens/mechanics/mechanics_home_page.dart';
 
 class CustomDrawer extends StatefulWidget {
   final Color headerColor;
@@ -94,314 +95,310 @@ class _CustomDrawerState extends State<CustomDrawer> {
           ),
 
           // Home / Dashboard - Apenas para Analista
-          
-            widget.useCustomIcons
-                ? _buildDrawerItemWithImage(
-                    imageAsset: 'lib/assets/images/iconDashboard.png',
-                    text: 'Home',
-                    onTap: () {
-                      Navigator.pop(context); // Fechar o drawer
+          widget.useCustomIcons
+              ? _buildDrawerItemWithImage(
+                imageAsset: 'lib/assets/images/iconDashboard.png',
+                text: 'Home',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
 
-                      // Verificar se já não está na Home
-                      if (!(context.widget is HomePage)) {
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (context) => HomePage()),
-                          (route) => false, // Remove todas as rotas anteriores
-                        );
-                      }
-                    },
-                  )
-                : _buildDrawerItemWithIcon(
-                    icon: Icons.home,
-                    text: 'Home',
-                    onTap: () {
-                      Navigator.pop(context); // Fechar o drawer
+                  // Verificar se já não está na Home
+                  if (!(context.widget is HomePage)) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => HomePage()),
+                      (route) => false, // Remove todas as rotas anteriores
+                    );
+                  }
+                },
+              )
+              : _buildDrawerItemWithIcon(
+                icon: Icons.home,
+                text: 'Home',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
 
-                      // Verificar se já não está na Home
-                      if (!(context.widget is HomePage)) {
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (context) => HomePage()),
-                          (route) => false, // Remove todas as rotas anteriores
-                        );
-                      }
-                    },
-                  ),
+                  // Verificar se já não está na Home
+                  if (!(context.widget is HomePage)) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => HomePage()),
+                      (route) => false, // Remove todas as rotas anteriores
+                    );
+                  }
+                },
+              ),
 
           // Orçamentos - Apenas para Analista
           if (isAnalista)
             widget.useCustomIcons
                 ? _buildDrawerItemWithImage(
-                    imageAsset: 'lib/assets/images/iconTerceirize.png',
-                    text: 'Orçamentos',
-                    onTap: () {
-                      Navigator.pop(context); // Fechar o drawer
+                  imageAsset: 'lib/assets/images/iconTerceirize.png',
+                  text: 'Orçamentos',
+                  onTap: () {
+                    Navigator.pop(context); // Fechar o drawer
 
-                      // Navegação para a tela de orçamentos
-                      // Quando implementada, substitua este código:
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Funcionalidade em desenvolvimento'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                  )
+                    // Navegação para a tela de orçamentos
+                    // Quando implementada, substitua este código:
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Funcionalidade em desenvolvimento'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                )
                 : _buildDrawerItemWithIcon(
-                    icon: Icons.request_quote,
-                    text: 'Orçamentos',
-                    onTap: () {
-                      Navigator.pop(context); // Fechar o drawer
+                  icon: Icons.request_quote,
+                  text: 'Orçamentos',
+                  onTap: () {
+                    Navigator.pop(context); // Fechar o drawer
 
-                      // Navegação para a tela de orçamentos
-                      // Quando implementada, substitua este código:
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Funcionalidade em desenvolvimento'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                  ),
+                    // Navegação para a tela de orçamentos
+                    // Quando implementada, substitua este código:
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Funcionalidade em desenvolvimento'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                ),
           if (isAnalista) const SizedBox(height: 8),
 
           // Manutenções - Acesso para ambos (Supervisor e Analista)
           widget.useCustomIcons
               ? _buildDrawerItemWithImage(
-                  imageAsset: 'lib/assets/images/iconManutencoes.png',
-                  text: 'Visualizar manutenções',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
+                imageAsset: 'lib/assets/images/iconManutencoes.png',
+                text: 'Visualizar manutenções',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
 
-                    // Navegação direta para a tela de manutenções
+                  // Navegação direta para a tela de manutenções
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ManutencaoScreen(),
+                    ),
+                  );
+                },
+              )
+              : _buildDrawerItemWithIcon(
+                icon: Icons.build,
+                text: 'Visualizar manutenções',
+                onTap: () {
+                  Navigator.pop(context); // Fechar o drawer
+
+                  // Navegação direta para a tela de manutenções
+                  if (isAnalista) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const ManutencaoScreen(),
                       ),
                     );
-                  },
-                )
-              : _buildDrawerItemWithIcon(
-                  icon: Icons.build,
-                  text: 'Visualizar manutenções',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-
-                    // Navegação direta para a tela de manutenções
-                    if(isAnalista){
-                      Navigator.push(
+                  } else {
+                    Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const ManutencaoScreen(),
+                        builder:
+                            (context) => const ManutencaoScreenSupervisor(),
                       ),
                     );
-                    }else{
-                      Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ManutencaoScreenSupervisor(),
-                      ),
-                    );
-                    }
-                    
-                  },
-                ),
+                  }
+                },
+              ),
           const SizedBox(height: 8),
 
           // Veículos inoperantes - Apenas para Analista
           if (isAnalista)
             widget.useCustomIcons
                 ? _buildDrawerItemWithImage(
-                    imageAsset: 'lib/assets/images/iconInoperantes.png',
-                    text: 'Veículos inoperantes',
-                    onTap: () {
-                      Navigator.pop(context); // Fechar o drawer
+                  imageAsset: 'lib/assets/images/iconInoperantes.png',
+                  text: 'Veículos inoperantes',
+                  onTap: () {
+                    Navigator.pop(context); // Fechar o drawer
 
-                      // Navegação direta para a tela de inoperantes
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => Inoperative()),
-                      );
-                    },
-                  )
+                    // Navegação direta para a tela de inoperantes
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Inoperative()),
+                    );
+                  },
+                )
                 : _buildDrawerItemWithIcon(
-                    icon: Icons.warning,
-                    text: 'Veículos inoperantes',
-                    onTap: () {
-                      Navigator.pop(context); // Fechar o drawer
+                  icon: Icons.warning,
+                  text: 'Veículos inoperantes',
+                  onTap: () {
+                    Navigator.pop(context); // Fechar o drawer
 
-                      // Navegação direta para a tela de inoperantes
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => Inoperative()),
-                      );
-                    },
-                  ),
+                    // Navegação direta para a tela de inoperantes
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Inoperative()),
+                    );
+                  },
+                ),
           if (isAnalista) const SizedBox(height: 8),
 
           // Dashboards - Apenas para Analista
           if (isAnalista)
             widget.useCustomIcons
                 ? _buildDrawerItemWithImage(
-                    imageAsset: 'lib/assets/images/iconDashboard.png',
-                    text: 'Dashboards',
-                    onTap: () {
-                      Navigator.pop(context); // Fechar o drawer
+                  imageAsset: 'lib/assets/images/iconDashboard.png',
+                  text: 'Dashboards',
+                  onTap: () {
+                    Navigator.pop(context); // Fechar o drawer
 
-                      // Navegação para a tela de dashboards
-                      // Quando implementada, substitua este código:
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Funcionalidade em desenvolvimento'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                  )
+                    // Navegação para a tela de dashboards
+                    // Quando implementada, substitua este código:
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Funcionalidade em desenvolvimento'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                )
                 : _buildDrawerItemWithIcon(
-                    icon: Icons.bar_chart,
-                    text: 'Dashboards',
-                    onTap: () {
-                      Navigator.pop(context); // Fechar o drawer
+                  icon: Icons.bar_chart,
+                  text: 'Dashboards',
+                  onTap: () {
+                    Navigator.pop(context); // Fechar o drawer
 
-                      // Navegação para a tela de dashboards
-                      // Quando implementada, substitua este código:
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Funcionalidade em desenvolvimento'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                  ),
+                    // Navegação para a tela de dashboards
+                    // Quando implementada, substitua este código:
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Funcionalidade em desenvolvimento'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                ),
           if (isAnalista) const SizedBox(height: 8),
 
           // Mecânicas - Apenas para Analista
           if (isAnalista)
             widget.useCustomIcons
                 ? _buildDrawerItemWithImage(
-                    imageAsset: 'lib/assets/images/iconMecanica.png',
-                    text: 'Mecânicas',
-                    onTap: () {
-                      Navigator.pop(context); // Fechar o drawer
+                  imageAsset: 'lib/assets/images/iconMecanica.png',
+                  text: 'Mecânicas',
+                  onTap: () {
+                    Navigator.pop(context); // Fechar o drawer
 
-                      // Navegação para a tela de mecânicas
-                      // Quando implementada, substitua este código:
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Funcionalidade em desenvolvimento'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                  )
+                    // Navegação para a tela de mecânicas
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MechanicsHomePage(),
+                      ),
+                    );
+                  },
+                )
                 : _buildDrawerItemWithIcon(
-                    icon: Icons.store,
-                    text: 'Mecânicas',
-                    onTap: () {
-                      Navigator.pop(context); // Fechar o drawer
+                  icon: Icons.store,
+                  text: 'Mecânicas',
+                  onTap: () {
+                    Navigator.pop(context); // Fechar o drawer
 
-                      // Navegação para a tela de mecânicas
-                      // Quando implementada, substitua este código:
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Funcionalidade em desenvolvimento'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                  ),
+                    // Navegação para a tela de mecânicas
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MechanicsHomePage(),
+                      ),
+                    );
+                  },
+                ),
           if (isAnalista) const SizedBox(height: 8),
 
           // Veículos - Apenas para Analista
           if (isAnalista)
             widget.useCustomIcons
                 ? _buildDrawerItemWithImage(
-                    imageAsset: 'lib/assets/images/iconCar.png',
-                    text: 'Veículos',
-                    onTap: () {
-                      Navigator.pop(context); // Fechar o drawer
+                  imageAsset: 'lib/assets/images/iconCar.png',
+                  text: 'Veículos',
+                  onTap: () {
+                    Navigator.pop(context); // Fechar o drawer
 
-                      // Navegação para a tela de veículos
-                      // Quando implementada, substitua este código:
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Funcionalidade em desenvolvimento'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                  )
+                    // Navegação para a tela de veículos
+                    // Quando implementada, substitua este código:
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Funcionalidade em desenvolvimento'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                )
                 : _buildDrawerItemWithIcon(
-                    icon: Icons.directions_car,
-                    text: 'Veículos',
-                    onTap: () {
-                      Navigator.pop(context); // Fechar o drawer
+                  icon: Icons.directions_car,
+                  text: 'Veículos',
+                  onTap: () {
+                    Navigator.pop(context); // Fechar o drawer
 
-                      // Navegação para a tela de veículos
-                      // Quando implementada, substitua este código:
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Funcionalidade em desenvolvimento'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                  ),
+                    // Navegação para a tela de veículos
+                    // Quando implementada, substitua este código:
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Funcionalidade em desenvolvimento'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                ),
           if (isAnalista) const SizedBox(height: 8),
 
           // Configurações/Usuários - Apenas para Analista
           if (isAnalista)
             widget.useCustomIcons
                 ? _buildDrawerItemWithImage(
-                    imageAsset: 'lib/assets/images/iconEngrenagem.png',
-                    text: 'Usuarios',
-                    onTap: () {
-                      Navigator.pop(context); // Fechar o drawer
+                  imageAsset: 'lib/assets/images/iconEngrenagem.png',
+                  text: 'Usuarios',
+                  onTap: () {
+                    Navigator.pop(context); // Fechar o drawer
 
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const UsuarioScreen(),
-                        ),
-                      );
-                    },
-                  )
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const UsuarioScreen(),
+                      ),
+                    );
+                  },
+                )
                 : _buildDrawerItemWithIcon(
-                    icon: Icons.people,
-                    text: 'Usuarios',
-                    onTap: () {
-                      Navigator.pop(context); // Fechar o drawer
+                  icon: Icons.people,
+                  text: 'Usuarios',
+                  onTap: () {
+                    Navigator.pop(context); // Fechar o drawer
 
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const UsuarioScreen(),
-                        ),
-                      );
-                    },
-                  ),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const UsuarioScreen(),
+                      ),
+                    );
+                  },
+                ),
           if (isAnalista) const SizedBox(height: 8),
 
           // Sair - Acesso para ambos
           widget.useCustomIcons
               ? _buildDrawerItemWithImage(
-                  imageAsset: 'lib/assets/images/iconExit.png',
-                  text: 'Sair',
-                  onTap: () => {
-                    _handleLogout(context)
-                  },
-                )
+                imageAsset: 'lib/assets/images/iconExit.png',
+                text: 'Sair',
+                onTap: () => {_handleLogout(context)},
+              )
               : _buildDrawerItemWithIcon(
-                  icon: Icons.exit_to_app,
-                  text: 'Sair',
-                  iconColor: Colors.red,
-                  onTap: () => {
-                    _handleLogout(context), // Chama o método de logout
-                  },
-                ),
+                icon: Icons.exit_to_app,
+                text: 'Sair',
+                iconColor: Colors.red,
+                onTap:
+                    () => {
+                      _handleLogout(context), // Chama o método de logout
+                    },
+              ),
         ],
       ),
     );
@@ -411,7 +408,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
   void _handleLogout(BuildContext context) {
     // Armazenar uma referência ao contexto fora do escopo do dialog
     final navigatorContext = Navigator.of(context);
-    
+
     // Fechar o drawer
     Navigator.pop(context);
 
@@ -435,13 +432,13 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   // Limpar o token e informações do usuário
                   final secureStorage = const FlutterSecureStorage();
                   await secureStorage.deleteAll();
-                  
+
                   // Fechar o diálogo
                   Navigator.of(dialogContext).pop();
-                  
+
                   // Pequeno atraso para garantir que o diálogo feche completamente
                   await Future.delayed(const Duration(milliseconds: 100));
-                  
+
                   // Usar o navigatorContext capturado anteriormente
                   navigatorContext.pushAndRemoveUntil(
                     MaterialPageRoute(builder: (context) => LoginPage()),
