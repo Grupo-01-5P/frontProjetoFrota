@@ -233,6 +233,13 @@ class _ManutencoesSolicitadasScreenState extends State<ManutencoesSolicitadasScr
                                       ),
                                     ),
                                     const SizedBox(height: 4),
+                                    Text(
+                                      'Urgencia: ${manutencao['urgencia']}',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
                                     Row(
                                       children: [
                                         const Text(
@@ -242,7 +249,7 @@ class _ManutencoesSolicitadasScreenState extends State<ManutencoesSolicitadasScr
                                           ),
                                         ),
                                         Text(
-                                          manutencao['analista']['nome'],
+                                          manutencao['supervisor']['nome'],
                                           style: const TextStyle(
                                             fontSize: 14,
                                           ),
