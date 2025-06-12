@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:front_projeto_flutter/screens/budgets/services/detailsService.dart';
-import 'package:intl/intl.dart'; 
+import 'package:intl/intl.dart';
+
+// Presumo que a sua BudgetsPage esteja neste caminho. Ajuste se necessário.
+import 'package:front_projeto_flutter/screens/budgets/budgets_page.dart';
 
 class BudgetsExibition extends StatefulWidget {
   final int budgetId;
@@ -75,11 +78,10 @@ class _BudgetsExibitionState extends State<BudgetsExibition> {
 
   // Função para determinar a cor e o texto da flag de status
   Widget _buildStatusFlag(String? status) {
-    Color flagColor = Colors.grey.shade300; // Cor padrão para status desconhecido
+    Color flagColor = Colors.grey.shade300; // Cor padrão
     Color textColor = Colors.black54;
     String statusText = status?.toUpperCase() ?? "DESCONHECIDO";
 
-    // Normalizar o status para minúsculas para comparação
     String normalizedStatus = status?.toLowerCase() ?? "";
 
     if (normalizedStatus == 'reproved' || normalizedStatus == 'reprovado') {
@@ -115,15 +117,14 @@ class _BudgetsExibitionState extends State<BudgetsExibition> {
       return 'N/A';
     }
     try {
-      // Usando o pacote intl para formatação mais robusta
-      final dateTime = DateTime.parse(dateString).toLocal(); // Converter para local se for UTC
+      final dateTime = DateTime.parse(dateString).toLocal();
       return DateFormat('dd/MM/yyyy HH:mm', 'pt_BR').format(dateTime);
     } catch (e) {
-      return dateString; // Retorna a string original se houver erro no parse
+      return dateString;
     }
   }
-  
-  // Widget _buildItem (adaptado para ser um método da classe)
+
+  // Widget _buildItem
   Widget _buildItemWidget(String title, String price, String description) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -133,7 +134,7 @@ class _BudgetsExibitionState extends State<BudgetsExibition> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded( // Para que o título possa quebrar linha
+              Expanded(
                 child: Text(
                   title,
                   style: const TextStyle(
@@ -148,13 +149,13 @@ class _BudgetsExibitionState extends State<BudgetsExibition> {
                 style: const TextStyle(
                   color: Colors.green,
                   fontWeight: FontWeight.bold,
-                  fontSize: 16, // Consistência de tamanho
+                  fontSize: 16,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 4),
-          if (description.isNotEmpty) // Só mostra descrição se houver
+          if (description.isNotEmpty)
             Text(
               description,
               style: const TextStyle(color: Colors.black54, fontSize: 14),
@@ -163,7 +164,6 @@ class _BudgetsExibitionState extends State<BudgetsExibition> {
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -190,7 +190,7 @@ class _BudgetsExibitionState extends State<BudgetsExibition> {
       );
     }
 
-    // Extração de dados do _budgetDetailsData
+    // Extração de dados
     final String nomeMecanica = _getSafe(_budgetDetailsData, ['oficina', 'nome'], 'N/A');
     final String placaVeiculo = _getSafe(_budgetDetailsData, ['manutencao', 'veiculo', 'placa'], 'N/A');
     final String statusOrcamento = _getSafe(_budgetDetailsData, ['status'], 'null');
@@ -199,26 +199,19 @@ class _BudgetsExibitionState extends State<BudgetsExibition> {
     final double valorMaoObra = _getSafe(_budgetDetailsData, ['valorMaoObra'], 0.0);
     final String descricaoServicoMaoObra = _getSafe(_budgetDetailsData, ['descricaoServico'], "Serviços gerais de mão de obra");
 
-    double somaProdutos = 0.0;
-    for (var produto in produtos) {
+    double somaProdutos = produtos.fold(0.0, (sum, produto) {
       if (produto is Map<String, dynamic>) {
-        somaProdutos += _getSafe(produto, ['valorUnitario'], 0.0);
+        return sum + _getSafe(produto, ['valorUnitario'], 0.0);
       }
-    }
+      return sum;
+    });
     final double totalGeral = somaProdutos + valorMaoObra;
 
     final String? dataReprovacao = _getSafe(_budgetDetailsData, ['dataReprovacao'], null);
     final String? motivoReprovacao = _getSafe(_budgetDetailsData, ['motivoReprovacao'], null);
-    final bool isReprovado = statusOrcamento?.toLowerCase() == 'reproved' || statusOrcamento?.toLowerCase() == 'reprovado';
-
+    final bool isReprovado = statusOrcamento.toLowerCase() == 'reproved' || statusOrcamento.toLowerCase() == 'reprovado';
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Resumo do Orçamento'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -227,16 +220,16 @@ class _BudgetsExibitionState extends State<BudgetsExibition> {
             // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start, // Alinha melhor se o status for grande
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded( // Para o texto da mecânica/placa quebrar linha se necessário
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         nomeMecanica,
                         style: const TextStyle(
-                          fontSize: 20, // Um pouco maior para destaque
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -248,13 +241,13 @@ class _BudgetsExibitionState extends State<BudgetsExibition> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8), // Espaço antes da flag
+                const SizedBox(width: 8),
                 _buildStatusFlag(statusOrcamento),
               ],
             ),
             const SizedBox(height: 24),
 
-            // Lista de Itens (Produtos + Mão de Obra)
+            // Lista de Itens
             if (produtos.isNotEmpty)
               ...produtos.map((produtoData) {
                 if (produtoData is Map<String, dynamic>) {
@@ -270,11 +263,10 @@ class _BudgetsExibitionState extends State<BudgetsExibition> {
                 return const SizedBox.shrink();
               }).toList(),
             
-            // Mão de Obra sempre listada
             _buildItemWidget(
               "Mão de obra",
               "R\$ ${valorMaoObra.toStringAsFixed(2)}",
-              descricaoServicoMaoObra, // Usando a descrição do serviço do orçamento
+              descricaoServicoMaoObra,
             ),
 
             const Divider(height: 32, thickness: 1),
@@ -284,13 +276,13 @@ class _BudgetsExibitionState extends State<BudgetsExibition> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Total Geral', // Alterado para mais clareza
+                  'Total Geral',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Text(
                   'R\$ ${totalGeral.toStringAsFixed(2)}',
                   style: const TextStyle(
-                    fontSize: 20, // Destaque no total
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.green,
                   ),
@@ -299,7 +291,7 @@ class _BudgetsExibitionState extends State<BudgetsExibition> {
             ),
             const SizedBox(height: 24),
 
-            // Seção de Reprovação (Condicional)
+            // Seção de Reprovação
             if (isReprovado) ...[
               const Text(
                 'Detalhes da Reprovação:',
@@ -319,15 +311,15 @@ class _BudgetsExibitionState extends State<BudgetsExibition> {
                     ],
                   ),
                 ),
-              const SizedBox(height: 8), // Espaço mesmo se não houver data
+              const SizedBox(height: 8),
               if (motivoReprovacao != null && motivoReprovacao.isNotEmpty)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    backgroundColor: Colors.blueGrey, // Cor diferente para esta ação
-                    padding: const EdgeInsets.symmetric(vertical: 12), // Menor padding
+                    backgroundColor: Colors.blueGrey,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -357,6 +349,30 @@ class _BudgetsExibitionState extends State<BudgetsExibition> {
           ],
         ),
       ),
+      // =========== BOTÃO ADICIONADO AQUI ===========
+      persistentFooterButtons: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.arrow_back),
+              label: const Text('VOLTAR PARA ORÇAMENTOS'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                backgroundColor: const Color(0xFF4A4A4A), // Cor escura para combinar
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) =>  BudgetsPage()),
+                );
+              },
+            ),
+          ),
+        )
+      ],
+      // ===============================================
       bottomNavigationBar: BottomNavigationBar(
         items: [
           const BottomNavigationBarItem(
@@ -365,7 +381,7 @@ class _BudgetsExibitionState extends State<BudgetsExibition> {
           ),
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
-              'lib/assets/images/_2009906610368.svg', // Verifique este caminho
+              'lib/assets/images/logoorcamentos.svg',
               width: 24,
               height: 24,
               colorFilter: const ColorFilter.mode(Colors.green, BlendMode.srcIn),
@@ -378,8 +394,14 @@ class _BudgetsExibitionState extends State<BudgetsExibition> {
           ),
         ],
         selectedItemColor: Colors.green,
-        currentIndex: 1, // Manter "Orçamentos" selecionado
-        // Adicionar lógica de onTap se necessário
+        unselectedItemColor: Colors.grey, // Adicionado para melhor UI
+        currentIndex: 1,
+        onTap: (index) {
+          // Adicione a lógica de navegação da BottomBar aqui se necessário
+          if (index == 1) {
+              // Já está na área de orçamentos, talvez recarregar ou não fazer nada
+          }
+        },
       ),
     );
   }

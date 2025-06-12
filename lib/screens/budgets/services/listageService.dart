@@ -1,11 +1,18 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class BudgetService {
-  final String _baseUrl = 'http://localhost:3001/orcamento'; 
+  final String _baseUrl = 'http://localhost:4040/orcamento'; 
   Future<List<Map<String, dynamic>>> fetchBudgets() async {
+    final _secureStorage = const FlutterSecureStorage();
+    final token = await _secureStorage.read(key: 'auth_token');
     try {
-      final response = await http.get(Uri.parse(_baseUrl));
+      final response = await http.get(Uri.parse(_baseUrl),
+      headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> decodedJson = json.decode(response.body);

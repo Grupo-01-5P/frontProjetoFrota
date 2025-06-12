@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class BudgetReprovalService {
-  final String _baseUrl = 'http://localhost:3001/orcamento'; // AJUSTE ESTA URL
+  final String _baseUrl = 'http://localhost:4040/orcamento'; // AJUSTE ESTA URL
 
   Future<void> reproveBudget(int budgetId) async {
+    final _secureStorage = const FlutterSecureStorage();
+    final token = await _secureStorage.read(key: 'auth_token');
     final String reproveUrl = '$_baseUrl/$budgetId';
 
     print("Reprovando orçamento (BudgetReprovalService) em: $reproveUrl");
@@ -14,6 +17,7 @@ class BudgetReprovalService {
         Uri.parse(reproveUrl),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
         },
         body: jsonEncode(<String, String>{
           'status': 'reproved', // Conforme especificado, apenas o status muda

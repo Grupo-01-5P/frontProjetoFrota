@@ -99,77 +99,17 @@ class _BudgetsListageState extends State<BudgetsListage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            UserAccountsDrawerHeader(
-              accountName: const Text('Kelvin'),
-              accountEmail: const Text('Editar minhas informações'),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.grey[200],
-                child: const Icon(Icons.person, size: 40, color: Colors.grey),
-              ),
-              decoration: const BoxDecoration(color: Colors.green),
-            ),
-            _buildDrawerItem(
-              icon: Icons.request_quote,
-              text: 'Orçamentos',
-              onTap: () {
-                if (ModalRoute.of(context)?.settings.name != '/budgets_page') {
-                     Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (context) => BudgetsPage()));
-                } else {
-                    Navigator.pop(context); 
-                }
-              },
-            ),
-            // ... (outros _buildDrawerItem permanecem os mesmos)
-             _buildDrawerItem(
-              icon: Icons.build,
-              text: 'Visualizar manutenções',
-              onTap: () {},
-            ),
-            _buildDrawerItem(
-              icon: Icons.warning,
-              text: 'Veículos inoperantes',
-              onTap: () {},
-            ),
-            _buildDrawerItem(
-              icon: Icons.bar_chart,
-              text: 'Dashboards',
-              onTap: () {},
-            ),
-            _buildDrawerItem(
-              icon: Icons.store,
-              text: 'Mecânicas',
-              onTap: () {},
-            ),
-            _buildDrawerItem(
-              icon: Icons.directions_car,
-              text: 'Veículos',
-              onTap: () {},
-            ),
-            _buildDrawerItem(
-              icon: Icons.settings,
-              text: 'Configurações',
-              onTap: () {},
-            ),
-            _buildDrawerItem(
-              icon: Icons.exit_to_app,
-              text: 'Sair',
-              iconColor: Colors.red,
-              onTap: () {},
-            ),
-          ],
-        ),
+      appBar: AppBar(
+        title: const Text('Listagem dos Orçamentos'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0.5,
       ),
       body: Stack(
         children: [
           Column(
             children: [
-              const SizedBox(height: 80), 
+             // const SizedBox(height: 80), 
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Card(
@@ -367,52 +307,6 @@ class _BudgetsListageState extends State<BudgetsListage> {
               ),
             ],
           ),
-          SafeArea( // Ícones do topo permanecem os mesmos
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.menu, color: Colors.black),
-                    onPressed: () {
-                      _scaffoldKey.currentState?.openDrawer();
-                    },
-                  ),
-                  Stack(
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.notifications,
-                          color: Colors.black,
-                        ),
-                        onPressed: () {},
-                      ),
-                      Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Text(
-                            '3',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar( // BottomNavigationBar permanece o mesmo
@@ -423,7 +317,7 @@ class _BudgetsListageState extends State<BudgetsListage> {
           ),
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
-              'lib/assets/images/_2009906610368.svg',
+              'lib/assets/images/logoorcamentos.svg',
               width: 24,
               height: 24,
               colorFilter: const ColorFilter.mode(Colors.green, BlendMode.srcIn),

@@ -243,7 +243,7 @@ class VehiclesPage extends StatelessWidget {
           ),
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
-              'lib/assets/images/_2009906610368.svg', // Caminho do SVG
+              'lib/assets/images/logoorcamentos.svg', // Caminho do SVG
               width: 24,
               height: 24,
               color: Colors.green, // Cor do ícone

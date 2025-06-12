@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:front_projeto_flutter/screens/budgets/budgets_listage.dart';
+import 'package:front_projeto_flutter/components/custom_drawer.dart';
 
 class BudgetsPage extends StatelessWidget {
   BudgetsPage({super.key});
@@ -11,139 +12,78 @@ class BudgetsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey, // Vincula a chave ao Scaffold
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            // Cabeçalho do menu
-            UserAccountsDrawerHeader(
-              accountName: const Text('Kelvin'),
-              accountEmail: const Text('Editar minhas informações'),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.grey[200],
-                child: const Icon(Icons.person, size: 40, color: Colors.grey),
-              ),
-              decoration: const BoxDecoration(color: Colors.green),
-            ),
-
-            // Itens do menu
-            _buildDrawerItem(
-              icon: Icons.request_quote,
-              text: 'Orçamentos',
-              onTap: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (context) => BudgetsPage()));
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.build,
-              text: 'Visualizar manutenções',
-              onTap: () {
-                // Ação para Visualizar manutenções
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.warning,
-              text: 'Veículos inoperantes',
-              onTap: () {
-                // Ação para Veículos inoperantes
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.bar_chart,
-              text: 'Dashboards',
-              onTap: () {
-                // Ação para Dashboards
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.store,
-              text: 'Mecânicas',
-              onTap: () {
-                // Ação para Mecânicas
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.directions_car,
-              text: 'Veículos',
-              onTap: () {
-                // Ação para Veículos
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.settings,
-              text: 'Configurações',
-              onTap: () {
-                // Ação para Configurações
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.exit_to_app,
-              text: 'Sair',
-              iconColor: Colors.red,
-              onTap: () {
-                // Ação para Sair
-              },
-            ),
-          ],
-        ),
+       key: _scaffoldKey,
+      // Adicione seu drawer aqui
+      drawer: CustomDrawer(
+        useCustomIcons: false,
       ),
-
-      body: Stack(
-        children: [
-          // Botões no topo
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Botão para abrir a sidebar
-                  IconButton(
-                    icon: const Icon(Icons.menu, color: Colors.black),
+      appBar: AppBar(
+        leading: Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: Colors.white, // Círculo branco
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2), // Cor do sombreado
+                blurRadius: 6, // Intensidade do sombreado
+                offset: const Offset(2, 2), // Posição do sombreado
+              ),
+            ],
+          ),
+          child: IconButton(
+            icon: Image.asset(
+              'lib/assets/images/iconMenu.png', // Caminho para a imagem do ícone de menu
+              width: 24,
+              height: 24,
+            ),
+            onPressed: () {
+              _scaffoldKey.currentState?.openDrawer();
+            },
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Stack(
+              alignment: Alignment.topRight,
+              children: [
+                CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.notifications_outlined,
+                      color: Colors.grey,
+                    ),
                     onPressed: () {
-                      _scaffoldKey.currentState?.openDrawer(); // Abre o Drawer
+                      // Ação para notificações
                     },
                   ),
-                  // Botão de notificações
-                  Stack(
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.notifications,
-                          color: Colors.black,
-                        ),
-                        onPressed: () {
-                          // Ação para notificações
-                        },
-                      ),
-                      Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Text(
-                            '3',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                ),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.orange,
+                    shape: BoxShape.circle,
                   ),
-                ],
-              ),
+                  child: const Text(
+                    '3',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
+        ],
+      ),
+      body: Stack(
+        children: [
           // Botões logo abaixo do cabeçalho
           Padding(
             padding: EdgeInsets.only(
@@ -179,7 +119,7 @@ class BudgetsPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         SvgPicture.asset(
-                          'lib/assets/images/_2009906610368.svg',
+                          'lib/assets/images/logoorcamentos.svg',
                           width: 24,
                           height: 24,
                           color: Colors.green,
@@ -215,7 +155,7 @@ class BudgetsPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         SvgPicture.asset(
-                          'lib/assets/images/_2009906610368.svg',
+                          'lib/assets/images/logoorcamentos.svg',
                           width: 24,
                           height: 24,
                           color: Colors.green,
@@ -239,7 +179,7 @@ class BudgetsPage extends StatelessWidget {
           ),
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
-              'lib/assets/images/_2009906610368.svg', // Caminho do SVG
+              'lib/assets/images/logoorcamentos.svg', // Caminho do SVG
               width: 24,
               height: 24,
               color: Colors.green, // Cor do ícone

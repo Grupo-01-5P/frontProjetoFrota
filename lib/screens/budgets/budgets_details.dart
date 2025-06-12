@@ -283,40 +283,44 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
 
 
     return Scaffold(
+      appBar: AppBar(
+       // A AppBar automaticamente adiciona o botão de voltar (setinha).
+       title: const Text('Detalhes do Orçamento'),
+       backgroundColor: Colors.transparent, // Deixa o fundo transparente
+       elevation: 0, // Remove a sombra
+       foregroundColor: Colors.black, // Garante que o título e o ícone de voltar sejam pretos
+       actions: [
+         // O ícone de notificação foi movido para cá (local correto para ações)
+         Stack(
+           alignment: Alignment.center,
+           children: [
+             IconButton(
+               icon: const Icon(Icons.notifications),
+               onPressed: () {},
+             ),
+             Positioned(
+               right: 8,
+               top: 8,
+               child: Container(
+                 padding: const EdgeInsets.all(4),
+                 decoration: const BoxDecoration(
+                   color: Colors.red,
+                   shape: BoxShape.circle,
+                 ),
+                 child: const Text(
+                   '3', 
+                   style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                 ),
+               ),
+             ),
+           ],
+         ),
+         const SizedBox(width: 8), // Pequeno espaçamento à direita
+       ],
+     ),
       body: SafeArea(
         child: Column(
           children: [
-            Padding( 
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end, 
-                children: [
-                  Stack(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.notifications, color: Colors.black),
-                        onPressed: () {},
-                      ),
-                      Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Text(
-                            '3', 
-                            style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Card(
@@ -473,7 +477,7 @@ Widget _buildBottomNav(BuildContext context) {
       ),
       BottomNavigationBarItem(
         icon: SvgPicture.asset(
-          'lib/assets/images/_2009906610368.svg', 
+          'lib/assets/images/logoorcamentos.svg', 
           width: 24,
           height: 24,
           colorFilter: const ColorFilter.mode(Colors.green, BlendMode.srcIn), 

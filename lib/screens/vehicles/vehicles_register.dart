@@ -287,7 +287,7 @@ class _VehiclesRegisterState extends State<VehiclesRegister> {
           ),
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
-              'lib/assets/images/_2009906610368.svg',
+              'lib/assets/images/logoorcamentos.svg',
               width: 24,
               height: 24,
               color: Colors.green,
