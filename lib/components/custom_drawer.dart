@@ -8,6 +8,7 @@ import 'package:front_projeto_flutter/screens/supervisor/maintenences/firstPage.
 import 'package:front_projeto_flutter/screens/supervisor/maintenences/manutencao_detalhe.dart';
 import 'package:front_projeto_flutter/screens/users/firstPage.dart';
 import 'package:front_projeto_flutter/screens/mechanics/mechanics_home_page.dart';
+import 'package:front_projeto_flutter/screens/products/products.dart';
 
 class CustomDrawer extends StatefulWidget {
   final Color headerColor;
@@ -307,6 +308,41 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => MechanicsHomePage(),
+                      ),
+                    );
+                  },
+                ),
+          if (isAnalista) const SizedBox(height: 8),
+
+          // Produtos - Apenas para Analista
+          if (isAnalista)
+            widget.useCustomIcons
+                ? _buildDrawerItemWithImage(
+                  imageAsset: 'lib/assets/images/iconProducts.png',
+                  text: 'Produtos',
+                  onTap: () {
+                    Navigator.pop(context); // Fechar o drawer
+
+                    // Navegação para a tela de produtos
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProdutosScreen(),
+                      ),
+                    );
+                  },
+                )
+                : _buildDrawerItemWithIcon(
+                  icon: Icons.inventory,
+                  text: 'Produtos',
+                  onTap: () {
+                    Navigator.pop(context); // Fechar o drawer
+
+                    // Navegação para a tela de produtos
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProdutosScreen(),
                       ),
                     );
                   },
