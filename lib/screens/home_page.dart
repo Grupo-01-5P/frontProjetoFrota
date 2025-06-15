@@ -18,7 +18,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final MapController _mapController = MapController();
-  
+
   List<MaintenanceData> _maintenances = [];
   bool _isLoading = true;
   String? _error;
@@ -37,18 +37,19 @@ class _HomePageState extends State<HomePage> {
       });
 
       final response = await http.get(
-        Uri.parse('http://localhost:4040/api/maintenence/?status=pendente'),
+        Uri.parse('http://localhost:4040/api/maintenance/?status=pendente'),
         headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final List<dynamic> maintenancesJson = data['manutencoes'];
-        
+
         setState(() {
-          _maintenances = maintenancesJson
-              .map((json) => MaintenanceData.fromJson(json))
-              .toList();
+          _maintenances =
+              maintenancesJson
+                  .map((json) => MaintenanceData.fromJson(json))
+                  .toList();
           _isLoading = false;
         });
       } else {
@@ -74,13 +75,13 @@ class _HomePageState extends State<HomePage> {
         children: [
           // Mapa como background
           _buildMap(),
-          
+
           // Header com botões
           _buildHeader(),
-          
+
           // Cards inferiores
           _buildBottomCards(),
-          
+
           // Loading overlay
           if (_isLoading) _buildLoadingOverlay(),
         ],
@@ -92,9 +93,16 @@ class _HomePageState extends State<HomePage> {
     return FlutterMap(
       mapController: _mapController,
       options: MapOptions(
-        center: _maintenances.isNotEmpty 
-            ? LatLng(_maintenances.first.latitude, _maintenances.first.longitude)
-            : const LatLng(-24.6181640639423, -53.70934113100743), // Coordenada padrão
+        center:
+            _maintenances.isNotEmpty
+                ? LatLng(
+                  _maintenances.first.latitude,
+                  _maintenances.first.longitude,
+                )
+                : const LatLng(
+                  -24.6181640639423,
+                  -53.70934113100743,
+                ), // Coordenada padrão
         zoom: 13.0,
         minZoom: 5.0,
         maxZoom: 18.0,
@@ -106,35 +114,45 @@ class _HomePageState extends State<HomePage> {
           userAgentPackageName: 'com.example.app',
         ),
         MarkerLayer(
-          markers: _maintenances.map((maintenance) => 
-            Marker(
-              point: LatLng(maintenance.latitude, maintenance.longitude),
-              width: 80,
-              height: 80,
-              builder: (context) => GestureDetector(
-                onTap: () => _showMaintenanceDetails(maintenance),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: _getUrgencyColor(maintenance.urgencia),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
+          markers:
+              _maintenances
+                  .map(
+                    (maintenance) => Marker(
+                      point: LatLng(
+                        maintenance.latitude,
+                        maintenance.longitude,
                       ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.build,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-              ),
-            ),
-          ).toList(),
+                      width: 80,
+                      height: 80,
+                      builder:
+                          (context) => GestureDetector(
+                            onTap: () => _showMaintenanceDetails(maintenance),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: _getUrgencyColor(maintenance.urgencia),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 3,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.build,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                          ),
+                    ),
+                  )
+                  .toList(),
         ),
       ],
     );
@@ -166,7 +184,7 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () => _scaffoldKey.currentState?.openDrawer(),
               ),
             ),
-            
+
             // Botões de ação do mapa
             Row(
               children: [
@@ -189,7 +207,7 @@ class _HomePageState extends State<HomePage> {
                     onPressed: _loadMaintenances,
                   ),
                 ),
-                
+
                 // Botão notificações
                 Stack(
                   children: [
@@ -206,7 +224,10 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                       child: IconButton(
-                        icon: const Icon(Icons.notifications, color: Colors.black),
+                        icon: const Icon(
+                          Icons.notifications,
+                          color: Colors.black,
+                        ),
                         onPressed: () {},
                       ),
                     ),
@@ -266,9 +287,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildLoadingOverlay() {
     return Container(
       color: Colors.black.withOpacity(0.3),
-      child: const Center(
-        child: CircularProgressIndicator(),
-      ),
+      child: const Center(child: CircularProgressIndicator()),
     );
   }
 
@@ -291,115 +310,149 @@ class _HomePageState extends State<HomePage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.6,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Handle bar
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              
-              // Título
-              Row(
+      builder:
+          (context) => Container(
+            height: MediaQuery.of(context).size.height * 0.6,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.build,
-                    color: _getUrgencyColor(maintenance.urgencia),
-                    size: 28,
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Detalhes da Manutenção',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                  // Handle bar
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              
-              // Informações
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 20),
+
+                  // Título
+                  Row(
                     children: [
-                      _buildDetailRow('Veículo', '${maintenance.veiculo.marca} ${maintenance.veiculo.modelo}'),
-                      _buildDetailRow('Placa', maintenance.veiculo.placa),
-                      _buildDetailRow('Problema', maintenance.descricaoProblema),
-                      _buildDetailRow('Urgência', maintenance.urgencia.toUpperCase()),
-                      _buildDetailRow('Status', maintenance.status.toUpperCase()),
-                      _buildDetailRow('Supervisor', maintenance.supervisor.nome),
-                      _buildDetailRow('Email', maintenance.supervisor.email),
-                      _buildDetailRow('Empresa', maintenance.veiculo.empresa),
-                      _buildDetailRow('Departamento', maintenance.veiculo.departamento),
-                      _buildDetailRow('Data Solicitação', _formatDate(maintenance.dataSolicitacao)),
+                      Icon(
+                        Icons.build,
+                        color: _getUrgencyColor(maintenance.urgencia),
+                        size: 28,
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Detalhes da Manutenção',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
-                ),
-              ),
-              
-              // Botões de ação
-              Row(
-                children: [
+                  const SizedBox(height: 20),
+
+                  // Informações
                   Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        // Implementar aprovação
-                      },
-                      icon: const Icon(Icons.check, color: Colors.white),
-                      label: const Text('Aprovar', style: TextStyle(color: Colors.white)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildDetailRow(
+                            'Veículo',
+                            '${maintenance.veiculo.marca} ${maintenance.veiculo.modelo}',
+                          ),
+                          _buildDetailRow('Placa', maintenance.veiculo.placa),
+                          _buildDetailRow(
+                            'Problema',
+                            maintenance.descricaoProblema,
+                          ),
+                          _buildDetailRow(
+                            'Urgência',
+                            maintenance.urgencia.toUpperCase(),
+                          ),
+                          _buildDetailRow(
+                            'Status',
+                            maintenance.status.toUpperCase(),
+                          ),
+                          _buildDetailRow(
+                            'Supervisor',
+                            maintenance.supervisor.nome,
+                          ),
+                          _buildDetailRow(
+                            'Email',
+                            maintenance.supervisor.email,
+                          ),
+                          _buildDetailRow(
+                            'Empresa',
+                            maintenance.veiculo.empresa,
+                          ),
+                          _buildDetailRow(
+                            'Departamento',
+                            maintenance.veiculo.departamento,
+                          ),
+                          _buildDetailRow(
+                            'Data Solicitação',
+                            _formatDate(maintenance.dataSolicitacao),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        // Implementar reprovação
-                      },
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      label: const Text('Reprovar', style: TextStyle(color: Colors.white)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+
+                  // Botões de ação
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            // Implementar aprovação
+                          },
+                          icon: const Icon(Icons.check, color: Colors.white),
+                          label: const Text(
+                            'Aprovar',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            // Implementar reprovação
+                          },
+                          icon: const Icon(Icons.close, color: Colors.white),
+                          label: const Text(
+                            'Reprovar',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -419,12 +472,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 16),
-            ),
-          ),
+          Expanded(child: Text(value, style: const TextStyle(fontSize: 16))),
         ],
       ),
     );
@@ -516,18 +564,10 @@ class Supervisor {
   final String nome;
   final String email;
 
-  Supervisor({
-    required this.id,
-    required this.nome,
-    required this.email,
-  });
+  Supervisor({required this.id, required this.nome, required this.email});
 
   factory Supervisor.fromJson(Map<String, dynamic> json) {
-    return Supervisor(
-      id: json['id'],
-      nome: json['nome'],
-      email: json['email'],
-    );
+    return Supervisor(id: json['id'], nome: json['nome'], email: json['email']);
   }
 }
 

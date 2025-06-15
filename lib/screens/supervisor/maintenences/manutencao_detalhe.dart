@@ -566,6 +566,9 @@ class _ManutencaoDetailScreenSupervisorState
                           Text(
                             'Email: ${_oficinasSelecionada['email'] ?? 'Não informado'}',
                           ),
+                          Text(
+                            'Data para levar: ${_formatDate(widget.manutencao['dataEnviarMecanica']) ?? 'Não informado'} - ${DateFormat('HH:mm').format(DateTime.parse(widget.manutencao['dataSolicitacao']))}',
+                          ),
                         ],
                       ),
                     ),

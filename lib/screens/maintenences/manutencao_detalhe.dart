@@ -30,6 +30,10 @@ class _ManutencaoDetailScreenState extends State<ManutencaoDetailScreen> {
   String? _errorMessage;
   String? _successMessage;
   final MapController _mapController = MapController();
+  DateTime? _dataSelecionada;
+  TimeOfDay? _horarioSelecionado;
+  final _dataController = TextEditingController();
+  final _horarioController = TextEditingController();
   
   // Variáveis para armazenar dados de localização
   String _enderecoCompleto = 'Carregando endereço...';
@@ -122,6 +126,256 @@ class _ManutencaoDetailScreenState extends State<ManutencaoDetailScreen> {
     }
   }
   
+  Future<void> _selecionarData() async {
+  final DateTime? picked = await showDatePicker(
+    context: context,
+    initialDate: DateTime.now().add(const Duration(days: 1)), // Amanhã como padrão
+    firstDate: DateTime.now(),
+    lastDate: DateTime.now().add(const Duration(days: 365)), // Até 1 ano
+    locale: const Locale('pt', 'BR'),
+    builder: (context, child) {
+      return Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: ColorScheme.light(
+            primary: const Color(0xFF0C7E3D),
+            onPrimary: Colors.white,
+            surface: Colors.white,
+            onSurface: Colors.black,
+          ),
+        ),
+        child: child!,
+      );
+    },
+  );
+  
+  if (picked != null && picked != _dataSelecionada) {
+    setState(() {
+      _dataSelecionada = picked;
+      _dataController.text = DateFormat('dd/MM/yyyy').format(picked);
+    });
+  }
+}
+
+// Função para selecionar horário
+Future<void> _selecionarHorario() async {
+  final TimeOfDay? picked = await showTimePicker(
+    context: context,
+    initialTime: const TimeOfDay(hour: 9, minute: 0), // 09:00 como padrão
+    builder: (context, child) {
+      return Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: ColorScheme.light(
+            primary: const Color(0xFF0C7E3D),
+            onPrimary: Colors.white,
+            surface: Colors.white,
+            onSurface: Colors.black,
+          ),
+        ),
+        child: child!,
+      );
+    },
+  );
+  
+  if (picked != null && picked != _horarioSelecionado) {
+    setState(() {
+      _horarioSelecionado = picked;
+      _horarioController.text = picked.format(context);
+    });
+  }
+}
+
+// Função para mostrar diálogo de aprovação com data e horário
+void _mostrarDialogoAprovacao() {
+  // Resetar seleções
+  _dataSelecionada = null;
+  _horarioSelecionado = null;
+  _dataController.clear();
+  _horarioController.clear();
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Aprovar Manutenção'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (_oficinasSelecionada != null) ...[
+                    Text(
+                      'Oficina: ${_oficinasSelecionada!['nome']}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  
+                  const Text(
+                    'Selecione a data e horário para levar o veículo à mecânica:',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Campo de data
+                  TextField(
+                    controller: _dataController,
+                    readOnly: true,
+                    decoration: InputDecoration(
+                      labelText: 'Data *',
+                      hintText: 'Selecione a data',
+                      prefixIcon: const Icon(Icons.calendar_today),
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            _dataSelecionada = null;
+                            _dataController.clear();
+                          });
+                        },
+                      ),
+                    ),
+                    onTap: () async {
+                      final DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now().add(const Duration(days: 1)),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                        builder: (context, child) {
+                          return Theme(
+                            data: Theme.of(context).copyWith(
+                              colorScheme: ColorScheme.light(
+                                primary: const Color(0xFF0C7E3D),
+                                onPrimary: Colors.white,
+                                surface: Colors.white,
+                                onSurface: Colors.black,
+                              ),
+                            ),
+                            child: child!,
+                          );
+                        },
+                      );
+                      
+                      if (picked != null) {
+                        setState(() {
+                          _dataSelecionada = picked;
+                          _dataController.text = DateFormat('dd/MM/yyyy').format(picked);
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Campo de horário
+                  TextField(
+                    controller: _horarioController,
+                    readOnly: true,
+                    decoration: InputDecoration(
+                      labelText: 'Horário (opcional)',
+                      hintText: 'Selecione o horário',
+                      prefixIcon: const Icon(Icons.access_time),
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            _horarioSelecionado = null;
+                            _horarioController.clear();
+                          });
+                        },
+                      ),
+                    ),
+                    onTap: () async {
+                      final TimeOfDay? picked = await showTimePicker(
+                        context: context,
+                        initialTime: const TimeOfDay(hour: 9, minute: 0),
+                        builder: (context, child) {
+                          return Theme(
+                            data: Theme.of(context).copyWith(
+                              colorScheme: ColorScheme.light(
+                                primary: const Color(0xFF0C7E3D),
+                                onPrimary: Colors.white,
+                                surface: Colors.white,
+                                onSurface: Colors.black,
+                              ),
+                            ),
+                            child: child!,
+                          );
+                        },
+                      );
+                      
+                      if (picked != null) {
+                        setState(() {
+                          _horarioSelecionado = picked;
+                          _horarioController.text = picked.format(context);
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.info, color: Colors.blue, size: 20),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'A data é obrigatória. O horário é opcional e pode ser definido posteriormente.',
+                            style: TextStyle(fontSize: 14, color: Colors.blue),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Cancelar'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                ),
+                child: const Text(
+                  'Aprovar',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onPressed: () {
+                  if (_dataSelecionada == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Por favor, selecione uma data.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+                  Navigator.of(context).pop();
+                  _aprovarManutencao();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+
   // Função para filtrar oficinas
   void _filtrarOficinas() {
     setState(() {
@@ -367,81 +621,103 @@ class _ManutencaoDetailScreenState extends State<ManutencaoDetailScreen> {
 
   // Função para aprovar manutenção
   Future<void> _aprovarManutencao() async {
-    // Verificar se uma oficina foi selecionada
-    if (_oficinasSelecionada == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor, selecione uma oficina antes de aprovar a manutenção.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+  // Verificar se uma oficina foi selecionada
+  if (_oficinasSelecionada == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Por favor, selecione uma oficina antes de aprovar a manutenção.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+  // Verificar se uma data foi selecionada
+  if (_dataSelecionada == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Por favor, selecione uma data para levar o veículo à mecânica.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+  setState(() {
+    _isLoading = true;
+    _errorMessage = null;
+    _successMessage = null;
+  });
+
+  try {
+    final token = await _secureStorage.read(key: 'auth_token');
+    
+    if (token == null) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
+      });
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-      _successMessage = null;
-    });
+    final url = Uri.parse('http://localhost:4040/api/maintenance/${widget.manutencao['id']}/aprovar');
+    
+    // Preparar o corpo da requisição
+    final requestBody = {
+      'oficinaId': _oficinasSelecionada['id'],
+      'dataEnviarMecanica': DateFormat('yyyy-MM-dd').format(_dataSelecionada!),
+    };
 
-    try {
-      final token = await _secureStorage.read(key: 'auth_token');
-      
-      if (token == null) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
-        });
-        return;
-      }
+    // Adicionar horário se foi selecionado
+    if (_horarioSelecionado != null) {
+      requestBody['horarioEnviarMecanica'] = 
+          '${_horarioSelecionado!.hour.toString().padLeft(2, '0')}:${_horarioSelecionado!.minute.toString().padLeft(2, '0')}';
+    }
+    
+    final response = await http.patch(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(requestBody),
+    );
 
-      final url = Uri.parse('http://localhost:4040/api/maintenance/${widget.manutencao['id']}/aprovar');
-      
-      // Incluir o ID da oficina selecionada no corpo da requisição
-      final response = await http.patch(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'oficinaId': _oficinasSelecionada['id']}),
-      );
-
-      if (response.statusCode == 204) {
-        setState(() {
-          _isLoading = false;
-          _successMessage = 'Manutenção aprovada com sucesso!';
-        });
-        
-        Future.delayed(const Duration(seconds: 2), () {
-          Navigator.pop(context, true);
-        });
-      } else if (response.statusCode == 401) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
-        });
-      } else {
-        try {
-          final errorData = jsonDecode(response.body);
-          setState(() {
-            _isLoading = false;
-            _errorMessage = errorData['error'] ?? 'Erro ao aprovar manutenção.';
-          });
-        } catch (e) {
-          setState(() {
-            _isLoading = false;
-            _errorMessage = 'Erro ao aprovar manutenção: ${response.statusCode}';
-          });
-        }
-      }
-    } catch (e) {
+    if (response.statusCode == 204) {
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Erro de conexão: ${e.toString()}';
+        _successMessage = 'Manutenção aprovada com sucesso!';
       });
+      
+      Future.delayed(const Duration(seconds: 2), () {
+        Navigator.pop(context, true);
+      });
+    } else if (response.statusCode == 401) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
+      });
+    } else {
+      try {
+        final errorData = jsonDecode(response.body);
+        setState(() {
+          _isLoading = false;
+          _errorMessage = errorData['error'] ?? 'Erro ao aprovar manutenção.';
+        });
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Erro ao aprovar manutenção: ${response.statusCode}';
+        });
+      }
     }
+  } catch (e) {
+    setState(() {
+      _isLoading = false;
+      _errorMessage = 'Erro de conexão: ${e.toString()}';
+    });
   }
+}
 
   // Função para reprovar manutenção
   Future<void> _reprovarManutencao(String motivo) async {
@@ -567,6 +843,8 @@ class _ManutencaoDetailScreenState extends State<ManutencaoDetailScreen> {
   void dispose() {
     _motivoController.dispose();
     _searchController.dispose();
+    _dataController.dispose();  // Adicione esta linha
+    _horarioController.dispose();  // Adicione esta linha
     super.dispose();
   }
 
@@ -816,6 +1094,9 @@ class _ManutencaoDetailScreenState extends State<ManutencaoDetailScreen> {
                           Text('${_oficinasSelecionada['cidade'] ?? ''} - ${_oficinasSelecionada['estado'] ?? ''}'),
                           Text('Tel: ${_oficinasSelecionada['telefone'] ?? 'Não informado'}'),
                           Text('Email: ${_oficinasSelecionada['email'] ?? 'Não informado'}'),
+                          Text(
+                            'Data para levar: ${_formatDate(widget.manutencao['dataEnviarMecanica']) ?? 'Não informado'} - ${DateFormat('HH:mm').format(DateTime.parse(widget.manutencao['dataSolicitacao']))}',
+                          ),
                         ],
                       ),
                     ),
@@ -1046,7 +1327,7 @@ class _ManutencaoDetailScreenState extends State<ManutencaoDetailScreen> {
                                     ),
                                     onPressed: _oficinasSelecionada == null || _isLoading 
                                         ? null 
-                                        : _aprovarManutencao,
+                                        : _mostrarDialogoAprovacao, // Mudança aqui!
                                     child: const Text(
                                       'Aprovar',
                                       style: TextStyle(

@@ -413,6 +413,19 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
                                               Text('Data: ${_formatDate(manutencao['dataSolicitacao'])}'),
                                             ],
                                           ),
+                                          Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.calendar_today,
+                                                size: 16,
+                                                color: Colors.grey,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                'Data para levar: ${_formatDate(manutencao['dataEnviarMecanica']) ?? 'Não informado'} - ${DateFormat('HH:mm').format(DateTime.parse(manutencao['dataSolicitacao']))}',
+                                              ),
+                                            ],
+                                          ),
                                           if (status.toLowerCase() == 'Reprovada' && manutencao['motivoReprovacao'] != null)
                                             Padding(
                                               padding: const EdgeInsets.only(top: 8),

@@ -134,10 +134,12 @@ class _MaintenanceRequestScreenState extends State<MaintenanceRequestScreen> {
       }
 
       final veiculoId = widget.vehicle['id'];
-      final supervisorId = widget.vehicle['supervisorId']; // Assuming supervisorId is in vehicle object
-      
+      final supervisorId =
+          widget
+              .vehicle['supervisorId']; // Assuming supervisorId is in vehicle object
+
       final response = await http.post(
-        Uri.parse('http://localhost:4040/api/maintenence'),
+        Uri.parse('http://localhost:4040/api/maintenance'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
