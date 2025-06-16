@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:front_projeto_flutter/screens/budgets/budgets_page.dart';
+import 'package:front_projeto_flutter/components/custom_drawer.dart';
 import 'package:front_projeto_flutter/screens/vehicles/vehicles_details.dart';
 import 'package:front_projeto_flutter/screens/vehicles/vehicle_service.dart';
-import 'package:front_projeto_flutter/screens/vehicles/vehicles_page.dart';
+import 'package:front_projeto_flutter/screens/vehicles/vehicles_register.dart';
 
 class VehiclesListage extends StatefulWidget {
-  const VehiclesListage({super.key});
+  const VehiclesListage({Key? key}) : super(key: key);
 
   @override
   _VehiclesListageState createState() => _VehiclesListageState();
@@ -16,16 +15,11 @@ class _VehiclesListageState extends State<VehiclesListage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _searchController = TextEditingController();
   final VehicleService _vehicleService = VehicleService();
+  
   List<dynamic> _allVehicles = [];
   List<dynamic> _displayedVehicles = [];
   bool _isLoading = true;
-  bool _isSearching = false;
-  String _errorMessage = '';
-
-  // Controles de paginação
-  int _currentPage = 1;
-  final int _itemsPerPage = 5;
-  int _totalPages = 1;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -35,32 +29,22 @@ class _VehiclesListageState extends State<VehiclesListage> {
 
   @override
   void dispose() {
-    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
 
-  void _onSearchChanged() {
-    if (_searchController.text.isEmpty) {
-      setState(() {
-        _isSearching = false;
-        _updateDisplayedVehicles();
-      });
-    }
-  }
-
+  // Carregar veículos da API
   Future<void> _loadVehicles() async {
     setState(() {
       _isLoading = true;
-      _errorMessage = '';
+      _errorMessage = null;
     });
 
     try {
       final vehicles = await _vehicleService.getVehicles();
       setState(() {
         _allVehicles = vehicles;
-        _totalPages = (vehicles.length / _itemsPerPage).ceil();
-        _updateDisplayedVehicles();
+        _displayedVehicles = List.from(_allVehicles);
         _isLoading = false;
       });
     } catch (e) {
@@ -68,69 +52,30 @@ class _VehiclesListageState extends State<VehiclesListage> {
         _errorMessage = 'Erro ao carregar veículos: ${e.toString()}';
         _isLoading = false;
       });
+      print('Erro ao carregar veículos: $e');
     }
   }
 
-  void _updateDisplayedVehicles() {
-    final startIndex = (_currentPage - 1) * _itemsPerPage;
-    var endIndex = startIndex + _itemsPerPage;
-
-    if (endIndex > _allVehicles.length) {
-      endIndex = _allVehicles.length;
-    }
-
+  // Filtrar veículos com base no texto de pesquisa
+  void _filterVehicles(String search) {
     setState(() {
-      _displayedVehicles = _allVehicles.sublist(startIndex, endIndex);
+      if (search.isEmpty) {
+        _displayedVehicles = List.from(_allVehicles);
+      } else {
+        search = search.toLowerCase();
+        _displayedVehicles = _allVehicles.where((vehicle) {
+          final placa = vehicle['placa']?.toString().toLowerCase() ?? '';
+          final marca = vehicle['marca']?.toString().toLowerCase() ?? '';
+          final modelo = vehicle['modelo']?.toString().toLowerCase() ?? '';
+          return placa.contains(search) ||
+              marca.contains(search) ||
+              modelo.contains(search);
+        }).toList();
+      }
     });
   }
 
-  void _goToPage(int page) {
-    if (page >= 1 && page <= _totalPages) {
-      setState(() {
-        _currentPage = page;
-        _updateDisplayedVehicles();
-      });
-    }
-  }
-
-  Future<void> _searchVehicles() async {
-    final plate = _searchController.text.trim().toLowerCase();
-
-    if (plate.isEmpty) {
-      setState(() {
-        _isSearching = false;
-        _updateDisplayedVehicles();
-      });
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-      _isSearching = true;
-      _errorMessage = '';
-    });
-
-    try {
-      final localResults =
-          _allVehicles.where((vehicle) {
-            final vehiclePlate =
-                vehicle['placa']?.toString().toLowerCase() ?? '';
-            return vehiclePlate.contains(plate);
-          }).toList();
-
-      setState(() {
-        _displayedVehicles = localResults;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Erro na busca: ${e.toString()}';
-        _isLoading = false;
-        _displayedVehicles = [];
-      });
-    }
-  }
-
+  // Navegar para detalhes do veículo
   Future<void> _navigateToVehicleDetails(dynamic vehicle) async {
     final shouldRefresh = await Navigator.push<bool>(
       context,
@@ -144,417 +89,327 @@ class _VehiclesListageState extends State<VehiclesListage> {
     }
   }
 
-  Widget _buildPaginationControls() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed:
-                _currentPage > 1 ? () => _goToPage(_currentPage - 1) : null,
-          ),
-          Text('Página $_currentPage de $_totalPages'),
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed:
-                _currentPage < _totalPages
-                    ? () => _goToPage(_currentPage + 1)
-                    : null,
-          ),
-        ],
+  // Navegar para cadastro de veículo
+  void _navigateToVehicleRegister() async {
+    final shouldRefresh = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const VehiclesRegister(),
       ),
     );
+
+    if (shouldRefresh == true && mounted) {
+      await _loadVehicles();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.grey[100],
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            // Cabeçalho do menu
-            UserAccountsDrawerHeader(
-              accountName: const Text('Kelvin'),
-              accountEmail: const Text('Editar minhas informações'),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.grey[200],
-                child: const Icon(Icons.person, size: 40, color: Colors.grey),
-              ),
-              decoration: const BoxDecoration(color: Colors.green),
-            ),
-
-            // Itens do menu
-            _buildDrawerItem(
-              icon: Icons.request_quote,
-              text: 'Orçamentos',
-              onTap: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (context) => BudgetsPage()));
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.build,
-              text: 'Visualizar manutenções',
-              onTap: () {
-                // Ação para Visualizar manutenções
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.warning,
-              text: 'Veículos inoperantes',
-              onTap: () {
-                // Ação para Veículos inoperantes
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.bar_chart,
-              text: 'Dashboards',
-              onTap: () {
-                // Ação para Dashboards
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.store,
-              text: 'Mecânicas',
-              onTap: () {
-                // Ação para Mecânicas
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.directions_car,
-              text: 'Veículos',
-              onTap: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (context) => VehiclesPage()));
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.settings,
-              text: 'Configurações',
-              onTap: () {
-                // Ação para Configurações
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.exit_to_app,
-              text: 'Sair',
-              iconColor: Colors.red,
-              onTap: () {
-                // Ação para Sair
-              },
-            ),
-          ],
-        ),
+      backgroundColor: const Color(0xFFF5F5F5),
+      
+      // Drawer padronizado
+      drawer: CustomDrawer(
+        useCustomIcons: false,
       ),
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              const SizedBox(height: 80),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 6,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
+      
+      // AppBar padronizado
+      appBar: AppBar(
+        leading: Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 6,
+                offset: const Offset(2, 2),
+              ),
+            ],
+          ),
+          child: IconButton(
+            icon: Image.asset(
+              'lib/assets/images/iconMenu.png',
+              width: 24,
+              height: 24,
+            ),
+            onPressed: () {
+              _scaffoldKey.currentState?.openDrawer();
+            },
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Stack(
+              alignment: Alignment.topRight,
+              children: [
+                CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.notifications_outlined,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () {
+                      // Ação para notificações
+                    },
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Buscar veículo',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: 'Digite a placa do veículo',
-                            filled: true,
-                            fillColor: Colors.grey[50],
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            suffixIcon: IconButton(
-                              icon:
-                                  _isSearching
-                                      ? const Icon(Icons.clear)
-                                      : const Icon(Icons.search),
-                              onPressed:
-                                  _isSearching
-                                      ? () {
-                                        _searchController.clear();
-                                        _searchVehicles();
-                                      }
-                                      : _searchVehicles,
-                            ),
-                          ),
-                          onSubmitted: (_) => _searchVehicles(),
-                        ),
-                      ],
+                ),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.orange,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Text(
+                    '3',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      
+      // Body padronizado
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Título e botão de ordenação
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Buscar veículo',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.sort_by_alpha,
+                    color: Colors.black87,
+                  ),
+                  onPressed: () {
+                    // Implementar ordenação se necessário
+                    setState(() {
+                      _displayedVehicles.sort((a, b) => 
+                        (a['placa'] ?? '').toString().compareTo((b['placa'] ?? '').toString())
+                      );
+                    });
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            
+            // Campo de pesquisa padronizado
+            TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Digite a placa, marca ou modelo do veículo',
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               ),
-              Expanded(
-                child:
-                    _isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : _errorMessage.isNotEmpty
-                        ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(_errorMessage),
-                              const SizedBox(height: 16),
-                              ElevatedButton(
-                                onPressed: _loadVehicles,
-                                child: const Text('Tentar novamente'),
-                              ),
-                            ],
-                          ),
-                        )
-                        : _displayedVehicles.isEmpty
-                        ? Center(
+              onChanged: _filterVehicles,
+            ),
+            const SizedBox(height: 16),
+            
+            // Mensagem de erro (se houver)
+            if (_errorMessage != null)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red.shade800, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _errorMessage!,
+                        style: TextStyle(color: Colors.red.shade800),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _loadVehicles,
+                      child: const Text('Tentar novamente'),
+                    ),
+                  ],
+                ),
+              ),
+            
+            // Lista de veículos padronizada
+            Expanded(
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF0C7E3D),
+                      ),
+                    )
+                  : _displayedVehicles.isEmpty
+                      ? Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               const Icon(
-                                Icons.search_off,
-                                size: 48,
+                                Icons.directions_car_outlined,
+                                size: 64,
                                 color: Colors.grey,
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                _isSearching
-                                    ? 'Nenhum veículo encontrado para "${_searchController.text}"'
-                                    : 'Nenhum veículo cadastrado',
+                                _searchController.text.isEmpty
+                                    ? 'Nenhum veículo cadastrado'
+                                    : 'Nenhum veículo encontrado',
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 16,
+                                ),
                               ),
-                              if (_isSearching)
+                              if (_searchController.text.isNotEmpty)
                                 TextButton(
                                   onPressed: () {
                                     _searchController.clear();
-                                    _searchVehicles();
+                                    _filterVehicles('');
                                   },
                                   child: const Text('Limpar busca'),
                                 ),
                             ],
                           ),
                         )
-                        : RefreshIndicator(
+                      : RefreshIndicator(
                           onRefresh: _loadVehicles,
-                          child: Column(
-                            children: [
-                              Expanded(
-                                child: ListView.builder(
-                                  itemCount: _displayedVehicles.length,
-                                  itemBuilder: (context, index) {
-                                    final vehicle = _displayedVehicles[index];
-                                    return Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        16,
-                                        8,
-                                        16,
-                                        8,
-                                      ),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(
-                                                0.05,
-                                              ),
-                                              blurRadius: 6,
-                                              offset: const Offset(0, 3),
-                                            ),
-                                          ],
-                                        ),
-                                        child: InkWell(
-                                          onTap:
-                                              () => _navigateToVehicleDetails(
-                                                vehicle,
-                                              ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(16),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    Text(
-                                                      vehicle['placa'] ?? 'N/A',
-                                                      style: const TextStyle(
-                                                        fontSize: 18,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    Text(
-                                                      '${vehicle['modelo'] ?? 'N/A'}\n'
-                                                      '${vehicle['anoFabricacao']?.toString() ?? 'N/A'}',
-                                                      textAlign:
-                                                          TextAlign.right,
-                                                      style: const TextStyle(
-                                                        fontSize: 16,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              if (!_isSearching) _buildPaginationControls(),
-                            ],
+                          child: ListView.separated(
+                            itemCount: _displayedVehicles.length,
+                            separatorBuilder: (context, index) => const SizedBox(height: 8),
+                            itemBuilder: (context, index) {
+                              final vehicle = _displayedVehicles[index];
+                              return _buildVehicleCard(vehicle);
+                            },
                           ),
                         ),
-              ),
-            ],
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.menu, color: Colors.black),
-                      onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Stack(
-                      children: [
-                        IconButton(
-                          icon: const Icon(
-                            Icons.notifications,
-                            color: Colors.black,
-                          ),
-                          onPressed: () {},
-                        ),
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Text(
-                              '3',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.build),
-            label: 'Manutenções',
-          ),
-          BottomNavigationBarItem(
-            icon: SvgPicture.asset(
-              'lib/assets/images/logoorcamentos.svg',
-              width: 24,
-              height: 24,
-              color: Colors.green,
-            ),
-            label: 'Orçamentos',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.warning),
-            label: 'Inoperante',
-          ),
-        ],
-        selectedItemColor: Colors.green,
+      
+      // Botão flutuante para adicionar novo veículo
+      floatingActionButton: FloatingActionButton(
+        onPressed: _navigateToVehicleRegister,
+        backgroundColor: const Color(0xFF0C7E3D),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  Widget _buildDrawerItem({
-    required IconData icon,
-    required String text,
-    required VoidCallback onTap,
-    Color iconColor = Colors.green,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: iconColor),
-      title: Text(text),
-      onTap: onTap,
+  // Widget para o card de veículo padronizado
+  Widget _buildVehicleCard(dynamic vehicle) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () => _navigateToVehicleDetails(vehicle),
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              // Ícone do veículo
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0C7E3D).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.directions_car,
+                  color: Color(0xFF0C7E3D),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              
+              // Informações do veículo
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Placa
+                    Text(
+                      vehicle['placa'] ?? 'N/A',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    
+                    // Marca e Modelo
+                    Text(
+                      '${vehicle['marca'] ?? 'N/A'} ${vehicle['modelo'] ?? 'N/A'}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    
+                    // Ano e Tipo
+                    Text(
+                      'Ano: ${vehicle['anoFabricacao']?.toString() ?? 'N/A'} • ${vehicle['tipoVeiculo'] ?? 'N/A'}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Seta para indicar que é clicável
+              Icon(
+                Icons.chevron_right,
+                color: Colors.grey.shade400,
+                size: 24,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

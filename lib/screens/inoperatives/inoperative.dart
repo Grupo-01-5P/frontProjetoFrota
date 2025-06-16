@@ -22,58 +22,9 @@ class _InoperativeState extends State<Inoperative> {
   @override
   void initState() {
     super.initState();
-    // Comentando chamada da API e usando dados estáticos
-    // fetchInoperantes();
-    carregarDadosEstaticos();
+    fetchInoperantes();
   }
 
-  void carregarDadosEstaticos() {
-    // Dados estáticos para teste
-    inoperantes = [
-      {
-        "id": 1,
-        "veiculo": {
-          "placa": "ABC1234",
-          "marca": "Toyota",
-          "modelo": "Corolla",
-          "anoModelo": 2023,
-          "cor": "Prata",
-          "empresa": "Empresa XYZ",
-          "departamento": "Frota Operacional",
-        },
-      },
-      {
-        "id": 2,
-        "veiculo": {
-          "placa": "DEF5678",
-          "marca": "Honda",
-          "modelo": "Civic",
-          "anoModelo": 2022,
-          "cor": "Preto",
-          "empresa": "Empresa ABC",
-          "departamento": "Vendas",
-        },
-      },
-      {
-        "id": 3,
-        "veiculo": {
-          "placa": "GHI9012",
-          "marca": "Volkswagen",
-          "modelo": "Golf",
-          "anoModelo": 2023,
-          "cor": "Branco",
-          "empresa": "Empresa 123",
-          "departamento": "Administrativo",
-        },
-      },
-    ];
-    setState(() {
-      isLoading = false;
-    });
-  }
-
-  // Comentando a função de chamada da API
-  /*
   Future<void> fetchInoperantes() async {
     try {
       final token = await _secureStorage.read(key: 'token');
@@ -102,7 +53,6 @@ class _InoperativeState extends State<Inoperative> {
       });
     }
   }
-  */
 
   void filterInoperantes(String query) {
     setState(() {

@@ -4,11 +4,14 @@ import 'package:front_projeto_flutter/screens/home_page.dart';
 import 'package:front_projeto_flutter/screens/inoperatives/inoperative.dart';
 import 'package:front_projeto_flutter/screens/login_page.dart';
 import 'package:front_projeto_flutter/screens/maintenences/firstPage.dart';
+// Corrigido: Import específico para a tela de manutenção do supervisor
 import 'package:front_projeto_flutter/screens/supervisor/maintenences/firstPage.dart';
-import 'package:front_projeto_flutter/screens/supervisor/maintenences/manutencao_detalhe.dart';
 import 'package:front_projeto_flutter/screens/users/firstPage.dart';
 import 'package:front_projeto_flutter/screens/mechanics/mechanics_home_page.dart';
 import 'package:front_projeto_flutter/screens/budgets/budgets_page.dart';
+import 'package:front_projeto_flutter/screens/products/products.dart';
+// Corrigido: Import específico para VehiclesPage principal
+import 'package:front_projeto_flutter/screens/vehicles/vehicles_page.dart';
 
 class CustomDrawer extends StatefulWidget {
   final Color headerColor;
@@ -194,8 +197,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder:
-                            (context) => const ManutencaoScreenSupervisor(),
+                        // Corrigido: Removido const se o construtor não suportar
+                        builder: (context) => const ManutencaoScreenSupervisor(),
                       ),
                     );
                   }
@@ -306,6 +309,41 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 ),
           if (isAnalista) const SizedBox(height: 8),
 
+          // Produtos - Apenas para Analista
+          if (isAnalista)
+            widget.useCustomIcons
+                ? _buildDrawerItemWithImage(
+                  imageAsset: 'lib/assets/images/iconProducts.png',
+                  text: 'Produtos',
+                  onTap: () {
+                    Navigator.pop(context); // Fechar o drawer
+
+                    // Navegação para a tela de produtos
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProdutosScreen(),
+                      ),
+                    );
+                  },
+                )
+                : _buildDrawerItemWithIcon(
+                  icon: Icons.inventory,
+                  text: 'Produtos',
+                  onTap: () {
+                    Navigator.pop(context); // Fechar o drawer
+
+                    // Navegação para a tela de produtos
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProdutosScreen(),
+                      ),
+                    );
+                  },
+                ),
+          if (isAnalista) const SizedBox(height: 8),
+
           // Veículos - Apenas para Analista
           if (isAnalista)
             widget.useCustomIcons
@@ -314,15 +352,14 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   text: 'Veículos',
                   onTap: () {
                     Navigator.pop(context); // Fechar o drawer
-
-                    // Navegação para a tela de veículos
-                    // Quando implementada, substitua este código:
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em desenvolvimento'),
-                        duration: Duration(seconds: 2),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        // Corrigido: Usando const com a VehiclesPage padronizada
+                        builder: (context) => const VehiclesPage(),
                       ),
                     );
+                    
                   },
                 )
                 : _buildDrawerItemWithIcon(
@@ -331,12 +368,11 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   onTap: () {
                     Navigator.pop(context); // Fechar o drawer
 
-                    // Navegação para a tela de veículos
-                    // Quando implementada, substitua este código:
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em desenvolvimento'),
-                        duration: Duration(seconds: 2),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        // Corrigido: Usando const com a VehiclesPage padronizada
+                        builder: (context) => const VehiclesPage(),
                       ),
                     );
                   },

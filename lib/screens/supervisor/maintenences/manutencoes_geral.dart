@@ -50,7 +50,7 @@ class _ManutencoesGeralScreenSupervisorState
       // Se seu backend não suporta filtragem por status diretamente, você precisará
       // implementar a filtragem do lado do cliente
       final url = Uri.parse(
-        'http://localhost:4040/api/maintenence/?status=$_filtroAtivo',
+        'http://localhost:4040/api/maintenance/?status=$_filtroAtivo',
       );
 
       final response = await http.get(
@@ -474,6 +474,19 @@ class _ManutencoesGeralScreenSupervisorState
                                     const SizedBox(width: 4),
                                     Text(
                                       'Data: ${_formatDate(manutencao['dataSolicitacao'])}',
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.calendar_today,
+                                      size: 16,
+                                      color: Colors.grey,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Data para levar: ${_formatDate(manutencao['dataEnviarMecanica']) ?? 'Não informado'} - ${DateFormat('HH:mm').format(DateTime.parse(manutencao['dataSolicitacao']))}',
                                     ),
                                   ],
                                 ),

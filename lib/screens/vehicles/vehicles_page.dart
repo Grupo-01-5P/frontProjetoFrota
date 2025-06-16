@@ -1,275 +1,257 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:front_projeto_flutter/components/custom_drawer.dart';
 import 'package:front_projeto_flutter/screens/vehicles/vehicles_listage.dart';
-import 'package:front_projeto_flutter/screens/budgets/budgets_page.dart';
 import 'package:front_projeto_flutter/screens/vehicles/vehicles_register.dart';
 
-class VehiclesPage extends StatelessWidget {
-  VehiclesPage({super.key});
+class VehiclesPage extends StatefulWidget {
+  const VehiclesPage({Key? key}) : super(key: key);
 
-  // Criação de uma GlobalKey para controlar o Scaffold
+  @override
+  _VehiclesPageState createState() => _VehiclesPageState();
+}
+
+class _VehiclesPageState extends State<VehiclesPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey, // Vincula a chave ao Scaffold
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            // Cabeçalho do menu
-            UserAccountsDrawerHeader(
-              accountName: const Text('Kelvin'),
-              accountEmail: const Text('Editar minhas informações'),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.grey[200],
-                child: const Icon(Icons.person, size: 40, color: Colors.grey),
-              ),
-              decoration: const BoxDecoration(color: Colors.green),
-            ),
-
-            // Itens do menu
-            _buildDrawerItem(
-              icon: Icons.request_quote,
-              text: 'Orçamentos',
-              onTap: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (context) => BudgetsPage()));
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.build,
-              text: 'Visualizar manutenções',
-              onTap: () {
-                // Ação para Visualizar manutenções
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.warning,
-              text: 'Veículos inoperantes',
-              onTap: () {
-                // Ação para Veículos inoperantes
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.bar_chart,
-              text: 'Dashboards',
-              onTap: () {
-                // Ação para Dashboards
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.store,
-              text: 'Mecânicas',
-              onTap: () {
-                // Ação para Mecânicas
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.directions_car,
-              text: 'Veículos',
-              onTap: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (context) => VehiclesPage()));
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.settings,
-              text: 'Configurações',
-              onTap: () {
-                // Ação para Configurações
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.exit_to_app,
-              text: 'Sair',
-              iconColor: Colors.red,
-              onTap: () {
-                // Ação para Sair
-              },
-            ),
-          ],
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: const Color(0xFFF5F5F5),
+        
+        // Drawer padronizado
+        drawer: CustomDrawer(
+          useCustomIcons: false,
         ),
-      ),
-
-      body: Stack(
-        children: [
-          // Botões no topo
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        
+        // AppBar padronizado
+        appBar: AppBar(
+          leading: Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 6,
+                  offset: const Offset(2, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Image.asset(
+                'lib/assets/images/iconMenu.png',
+                width: 24,
+                height: 24,
+              ),
+              onPressed: () {
+                _scaffoldKey.currentState?.openDrawer();
+              },
+            ),
+          ),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          actions: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Stack(
+                alignment: Alignment.topRight,
                 children: [
-                  // Botão para abrir a sidebar
-                  IconButton(
-                    icon: const Icon(Icons.menu, color: Colors.black),
-                    onPressed: () {
-                      _scaffoldKey.currentState?.openDrawer(); // Abre o Drawer
-                    },
+                  CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.notifications_outlined,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        // Ação para notificações
+                      },
+                    ),
                   ),
-                  // Botão de notificações
-                  Stack(
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.notifications,
-                          color: Colors.black,
-                        ),
-                        onPressed: () {
-                          // Ação para notificações
-                        },
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.orange,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Text(
+                      '3',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
                       ),
-                      Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Text(
-                            '3',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
-          // Botões logo abaixo do cabeçalho
-          Padding(
-            padding: EdgeInsets.only(
-              top: kToolbarHeight + 32, // altura do appBar + espaço extra
-              left: 16,
-              right: 16,
-            ),
-            child: Column(
-              children: [
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.20,
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+          ],
+        ),
+        
+        // Body padronizado
+        body: Column(
+          children: [
+            const SizedBox(height: 20),
+            
+            // Card de Cadastrar Veículo
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => VehiclesRegister(),
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => VehiclesRegister(),
-                        ),
-                      );
-                    },
+                  );
+                },
+                child: Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          'Cadastrar um veículo',
-                          style: TextStyle(fontSize: 24),
+                        const Center(
+                          child: Text(
+                            'Cadastrar um veículo',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ),
-                        const SizedBox(height: 8),
-                        SvgPicture.asset(
-                          'lib/assets/images/carromais.svg',
-                          width: 24,
-                          height: 24,
-                          color: Colors.green,
+                        const SizedBox(height: 12),
+                        Center(
+                          child: tryLoadSvg(
+                            'lib/assets/images/carromais.svg',
+                            size: 32,
+                            color: const Color(0xFF0C7E3D),
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 16), // Espaço entre os botões
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.20,
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Card de Visualizar Veículos
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => VehiclesListage(),
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => VehiclesListage(),
-                        ),
-                      );
-                    },
+                  );
+                },
+                child: Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          'Visualizar a base de veículos',
-                          style: TextStyle(fontSize: 24),
+                        const Center(
+                          child: Text(
+                            'Visualizar a base de veículos',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ),
-                        const SizedBox(height: 8),
-                        SvgPicture.asset(
-                          'lib/assets/images/carro.svg',
-                          width: 24,
-                          height: 24,
-                          color: Colors.green,
+                        const SizedBox(height: 12),
+                        Center(
+                          child: tryLoadSvg(
+                            'lib/assets/images/carro.svg',
+                            size: 32,
+                            color: const Color(0xFF0C7E3D),
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
-      ),
-
-      // Barra de navegação inferior
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.build),
-            label: 'Manutenções',
-          ),
-          BottomNavigationBarItem(
-            icon: SvgPicture.asset(
-              'lib/assets/images/logoorcamentos.svg', // Caminho do SVG
-              width: 24,
-              height: 24,
-              color: Colors.green, // Cor do ícone
+            
+            const SizedBox(height: 30),
+            
+            // Imagem ilustrativa no final
+            Expanded(
+              child: Center(
+                child: tryLoadImage(
+                  'lib/assets/images/vehicle_illustration.png',
+                  iconColor: const Color(0xFF0C7E3D),
+                ),
+              ),
             ),
-            label: 'Orçamentos',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.warning),
-            label: 'Inoperante',
-          ),
-        ],
-        selectedItemColor: Colors.green,
+          ],
+        ),
+        
+        
       ),
     );
   }
-
-  Widget _buildDrawerItem({
-    required IconData icon,
-    required String text,
-    required VoidCallback onTap,
-    Color iconColor = Colors.green,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: iconColor),
-      title: Text(text),
-      onTap: onTap,
-    );
+  
+  // Método para tentar carregar SVG ou retornar ícone alternativo
+  Widget tryLoadSvg(String svgPath, {Color? color, double size = 24}) {
+    try {
+      return SvgPicture.asset(
+        svgPath,
+        width: size,
+        height: size,
+        color: color,
+      );
+    } catch (e) {
+      print('Erro ao carregar o SVG: $e');
+      return Icon(
+        Icons.directions_car,
+        size: size,
+        color: color,
+      );
+    }
+  }
+  
+  // Método para tentar carregar imagem ou retornar ícone alternativo
+  Widget tryLoadImage(String imagePath, {Color? iconColor, double width = 400}) {
+    try {
+      return Image.asset(
+        imagePath,
+        width: width,
+        color: iconColor,
+        errorBuilder: (context, error, stackTrace) {
+          print('Erro ao carregar a imagem: $error');
+          return Icon(
+            Icons.directions_car,
+            size: width / 2,
+            color: iconColor,
+          );
+        },
+      );
+    } catch (e) {
+      print('Exceção ao tentar carregar a imagem: $e');
+      return Icon(
+        Icons.directions_car,
+        size: width / 2,
+        color: iconColor,
+      );
+    }
   }
 }
