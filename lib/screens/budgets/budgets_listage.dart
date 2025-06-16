@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:front_projeto_flutter/screens/budgets/budgets_page.dart';
+import 'package:front_projeto_flutter/screens/budgets/budgets_create.dart';
 import 'package:front_projeto_flutter/screens/budgets/budgets_details.dart';
 import 'package:front_projeto_flutter/screens/budgets/services/listageService.dart'; // Importar o Service
 
@@ -30,28 +31,35 @@ class _BudgetsListageState extends State<BudgetsListage> {
 
   void _loadBudgets() {
     _budgetsFuture = _budgetService.fetchBudgets();
-    _budgetsFuture.then((budgets) {
-      setState(() {
-        _allBudgets = budgets;
-        _filteredBudgets = budgets;
-      });
-    }).catchError((error) {
-      print("Erro ao carregar orçamentos: $error");
-      setState(() {
-        _allBudgets = [];
-        _filteredBudgets = [];
-      });
-    });
+    _budgetsFuture
+        .then((budgets) {
+          setState(() {
+            _allBudgets = budgets;
+            _filteredBudgets = budgets;
+          });
+        })
+        .catchError((error) {
+          print("Erro ao carregar orçamentos: $error");
+          setState(() {
+            _allBudgets = [];
+            _filteredBudgets = [];
+          });
+        });
   }
 
   void _filterBudgets() {
     final query = _searchController.text.toLowerCase();
     setState(() {
-      _filteredBudgets = _allBudgets.where((budget) {
-        // Acesso cuidadoso aos campos do mapa
-        final placa = budget['manutencao']?['veiculo']?['placa']?.toString().toLowerCase() ?? '';
-        return placa.contains(query);
-      }).toList();
+      _filteredBudgets =
+          _allBudgets.where((budget) {
+            // Acesso cuidadoso aos campos do mapa
+            final placa =
+                budget['manutencao']?['veiculo']?['placa']
+                        ?.toString()
+                        .toLowerCase() ??
+                    '';
+            return placa.contains(query);
+          }).toList();
     });
   }
 
@@ -61,7 +69,7 @@ class _BudgetsListageState extends State<BudgetsListage> {
     _searchController.dispose();
     super.dispose();
   }
-  
+
   String _formatDate(String? dateString) {
     if (dateString == null || dateString.isEmpty) return 'N/A';
     try {
@@ -87,14 +95,13 @@ class _BudgetsListageState extends State<BudgetsListage> {
     }
     // Tentar uma conversão se for num e T for double ou int
     if (defaultValue is double && current is num) {
-        return current.toDouble() as T;
+      return current.toDouble() as T;
     }
     if (defaultValue is int && current is num) {
-        return current.toInt() as T;
+      return current.toInt() as T;
     }
     return defaultValue;
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +116,7 @@ class _BudgetsListageState extends State<BudgetsListage> {
         children: [
           Column(
             children: [
-             // const SizedBox(height: 80), 
+              // const SizedBox(height: 80),
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Card(
@@ -170,11 +177,18 @@ class _BudgetsListageState extends State<BudgetsListage> {
                         ),
                       );
                     } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(child: Text('Nenhum orçamento encontrado.'));
+                      return const Center(
+                        child: Text('Nenhum orçamento encontrado.'),
+                      );
                     }
-                    
-                    if (_filteredBudgets.isEmpty && _searchController.text.isNotEmpty) {
-                         return const Center(child: Text('Nenhum orçamento encontrado para esta placa.'));
+
+                    if (_filteredBudgets.isEmpty &&
+                        _searchController.text.isNotEmpty) {
+                      return const Center(
+                        child: Text(
+                          'Nenhum orçamento encontrado para esta placa.',
+                        ),
+                      );
                     }
 
                     return ListView.builder(
@@ -183,23 +197,43 @@ class _BudgetsListageState extends State<BudgetsListage> {
                         final budget = _filteredBudgets[index];
 
                         // Acesso aos dados do mapa com checagem de nulidade e tipo
-                        final String placa = _getSafe(budget, ['manutencao', 'veiculo', 'placa'], 'N/A');
-                        final String status = _getSafe(budget, ['status'], 'N/A').toString().toUpperCase();
-                        final String nomeOficina = _getSafe(budget, ['oficina', 'nome'], 'N/A');
-                        final String descServico = _getSafe(budget, ['descricaoServico'], 'N/A');
-                        final String dataEnvioStr = _getSafe(budget, ['dataEnvio'], '');
-                        final double valorMaoObra = _getSafe(budget, ['valorMaoObra'], 0.0);
-                        
-                        final int budgetId = _getSafe(budget, ['id'], 0); 
+                        final String placa = _getSafe(budget, [
+                          'manutencao',
+                          'veiculo',
+                          'placa',
+                        ], 'N/A');
+                        final String status =
+                            _getSafe(budget, [
+                          'status',
+                        ], 'N/A').toString().toUpperCase();
+                        final String nomeOficina = _getSafe(budget, [
+                          'oficina',
+                          'nome',
+                        ], 'N/A');
+                        final String descServico = _getSafe(budget, [
+                          'descricaoServico',
+                        ], 'N/A');
+                        final String dataEnvioStr = _getSafe(budget, [
+                          'dataEnvio',
+                        ], '');
+                        final double valorMaoObra = _getSafe(budget, [
+                          'valorMaoObra',
+                        ], 0.0);
 
-                        final List<dynamic> produtosDynamic = _getSafe(budget, ['produtos'], []);
+                        final int budgetId = _getSafe(budget, ['id'], 0);
+
+                        final List<dynamic> produtosDynamic = _getSafe(budget, [
+                          'produtos',
+                        ], []);
                         double totalProdutos = 0.0;
                         if (produtosDynamic is List) {
-                            for (var produtoMap in produtosDynamic) {
-                                if (produtoMap is Map<String, dynamic>) {
-                                    totalProdutos += _getSafe(produtoMap, ['valorUnitario'], 0.0);
-                                }
+                          for (var produtoMap in produtosDynamic) {
+                            if (produtoMap is Map<String, dynamic>) {
+                              totalProdutos += _getSafe(produtoMap, [
+                                'valorUnitario',
+                              ], 0.0);
                             }
+                          }
                         }
 
                         return Padding(
@@ -212,9 +246,12 @@ class _BudgetsListageState extends State<BudgetsListage> {
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (context) => BudgetsDetails(
-                                    budgetData: budget, // Continuamos passando o mapa completo
-                                    budgetId: budgetId,   // <--- NOVO: Passando o ID extraído
+                                  builder:
+                                      (context) => BudgetsDetails(
+                                    budgetData:
+                                        budget, // Continuamos passando o mapa completo
+                                    budgetId:
+                                        budgetId, // <--- NOVO: Passando o ID extraído
                                   ),
                                 ),
                               );
@@ -230,7 +267,8 @@ class _BudgetsListageState extends State<BudgetsListage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                           placa,
@@ -244,11 +282,18 @@ class _BudgetsListageState extends State<BudgetsListage> {
                                           style: TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.bold,
-                                            color: status.toLowerCase() == 'pendente' 
-                                                   ? Colors.orangeAccent 
-                                                   : (status.toLowerCase() == 'aprovado'
-                                                      ? Colors.green 
-                                                      : Colors.grey),
+                                            color:
+                                                status.toLowerCase() ==
+                                                        'pendente'
+                                                    ? Colors.orangeAccent
+                                                    : (status.toLowerCase() ==
+                                                            'aprovado'
+                                                        ? Colors.green
+                                                        : (status.toLowerCase() ==
+                                                                'reprovado' 
+                                                            ? Colors
+                                                                .red 
+                                                            : Colors.grey)),
                                           ),
                                         ),
                                       ],
@@ -277,7 +322,7 @@ class _BudgetsListageState extends State<BudgetsListage> {
                                       ),
                                     ),
                                     const SizedBox(height: 8),
-                                     Text(
+                                    Text(
                                       'Mão de Obra: R\$ ${valorMaoObra.toStringAsFixed(2)}',
                                       style: const TextStyle(
                                         fontSize: 14,
@@ -290,10 +335,10 @@ class _BudgetsListageState extends State<BudgetsListage> {
                                         'Total Produtos: R\$ ${totalProdutos.toStringAsFixed(2)}',
                                         style: const TextStyle(
                                           fontSize: 14,
-                                           fontWeight: FontWeight.w500,
+                                          fontWeight: FontWeight.w500,
                                         ),
                                       ),
-                                    ]
+                                    ],
                                   ],
                                 ),
                               ),
@@ -309,7 +354,21 @@ class _BudgetsListageState extends State<BudgetsListage> {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar( // BottomNavigationBar permanece o mesmo
+      // NOVO: Botão flutuante adicionado aqui
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Navega para a página de criação de orçamento
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => BudgetCreate()),
+          );
+        },
+        backgroundColor: Colors.green,
+        child: const Icon(Icons.add, color: Colors.white),
+        tooltip: 'Criar Novo Orçamento',
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        // BottomNavigationBar permanece o mesmo
         items: [
           const BottomNavigationBarItem(
             icon: Icon(Icons.build),
@@ -320,7 +379,10 @@ class _BudgetsListageState extends State<BudgetsListage> {
               'lib/assets/images/logoorcamentos.svg',
               width: 24,
               height: 24,
-              colorFilter: const ColorFilter.mode(Colors.green, BlendMode.srcIn),
+              colorFilter: const ColorFilter.mode(
+                Colors.green,
+                BlendMode.srcIn,
+              ),
             ),
             label: 'Orçamentos',
           ),
@@ -337,7 +399,8 @@ class _BudgetsListageState extends State<BudgetsListage> {
     );
   }
 
-  Widget _buildDrawerItem({ // _buildDrawerItem permanece o mesmo
+  Widget _buildDrawerItem({
+    // _buildDrawerItem permanece o mesmo
     required IconData icon,
     required String text,
     required VoidCallback onTap,

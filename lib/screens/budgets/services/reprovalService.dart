@@ -20,7 +20,7 @@ class BudgetReprovalService {
           'Authorization': 'Bearer $token',
         },
         body: jsonEncode(<String, String>{
-          'status': 'reproved', // Conforme especificado, apenas o status muda
+          'status': 'reprovado', // Conforme especificado, apenas o status muda
         }),
       );
 

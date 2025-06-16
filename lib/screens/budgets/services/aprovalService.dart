@@ -23,7 +23,7 @@ class BudgetApprovalService {
           'Authorization': 'Bearer $token',
         },
         body: jsonEncode(<String, String>{
-          'status': 'approved', // Ou o valor que sua API espera para "aprovado"
+          'status': 'aprovado', // Ou o valor que sua API espera para "aprovado"
         }),
       );
 
