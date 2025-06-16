@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // Para o BottomNavigationBar
+import 'package:flutter_svg/flutter_svg.dart'; 
 import 'package:front_projeto_flutter/screens/budgets/budgets_listage.dart';
 import 'package:front_projeto_flutter/screens/budgets/budgets_reproval.dart';
 import 'package:front_projeto_flutter/screens/budgets/services/detailsService.dart';
@@ -29,11 +29,9 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
   String? _error;
   bool _isApproving = false;
   bool _isDeletingProduct = false;
-
-  // --- NOVOS ESTADOS PARA ADICIONAR PRODUTO ---
-  bool _isAddingProduct = false; // Controla a visibilidade do card de adição
-  bool _isLoadingProducts = false; // Loading para a lista de produtos
-  bool _isSavingProduct = false; // Loading para o botão de salvar
+  bool _isAddingProduct = false;
+  bool _isLoadingProducts = false;
+  bool _isSavingProduct = false;
   List<Map<String, dynamic>> _availableProducts = [];
   int? _selectedProductId;
   final _valorUnitarioController = TextEditingController();
@@ -48,7 +46,6 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
 
   @override
   void dispose() {
-    // Limpa os controllers para evitar memory leaks
     _valorUnitarioController.dispose();
     _fornecedorController.dispose();
     super.dispose();
@@ -77,11 +74,7 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
     }
   }
 
-  // --- NOVOS MÉTODOS PARA ADICIONAR PRODUTO ---
-
-  /// Mostra o formulário de adição de produto e busca a lista de produtos da API se necessário.
   Future<void> _showAddProductForm() async {
-    // Se a lista de produtos ainda não foi carregada, busca na API.
     if (_availableProducts.isEmpty && !_isLoadingProducts) {
       setState(() => _isLoadingProducts = true);
       try {
@@ -89,7 +82,7 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
         if (!mounted) return;
         setState(() {
           _availableProducts = products;
-          _isAddingProduct = true; // Mostra o formulário
+          _isAddingProduct = true;
         });
       } catch (e) {
         if (!mounted) return;
@@ -100,12 +93,10 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
         if (mounted) setState(() => _isLoadingProducts = false);
       }
     } else {
-      // Se a lista já foi carregada, apenas mostra o formulário.
       setState(() => _isAddingProduct = true);
     }
   }
 
-  /// Esconde o formulário e limpa os campos.
   void _hideAddProductForm() {
     setState(() {
       _isAddingProduct = false;
@@ -116,9 +107,7 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
     });
   }
 
-  /// Valida o formulário e envia os dados para a API.
   Future<void> _performAddProduct() async {
-    // Verifica se o formulário é válido
     if (!(_addProductFormKey.currentState?.validate() ?? false)) {
       return;
     }
@@ -128,7 +117,6 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
     try {
       final data = {
         "produtoId": _selectedProductId,
-        // Converte o valor para número, tratando vírgulas
         "valorUnitario": double.parse(_valorUnitarioController.text.replaceAll(',', '.')),
         "fornecedor": _fornecedorController.text,
       };
@@ -140,8 +128,8 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
         const SnackBar(content: Text('Produto adicionado com sucesso!'), backgroundColor: Colors.green),
       );
 
-      _hideAddProductForm(); // Esconde o formulário
-      await _fetchBudgetDetails(); // Recarrega os detalhes para mostrar o novo produto
+      _hideAddProductForm();
+      await _fetchBudgetDetails();
 
     } catch (e) {
       if (!mounted) return;
@@ -153,8 +141,6 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
     }
   }
 
-
-  // Demais métodos (_getSafe, _showApprovalConfirmationDialog, etc.) permanecem os mesmos...
   T _getSafe<T>(Map<String, dynamic>? map, List<String> keys, T defaultValue) {
     if (map == null) return defaultValue;
     dynamic current = map;
@@ -207,11 +193,11 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
                 ),
                 TextButton(
                   onPressed: _isApproving ? null : () async {
-                    Navigator.of(dialogContext).pop(); 
-                    await _performApproveBudget();   
+                    Navigator.of(dialogContext).pop();
+                    await _performApproveBudget();
                   },
-                  child: _isApproving 
-                      ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2)) 
+                  child: _isApproving
+                      ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
                       : const Text('Sim'),
                 ),
               ],
@@ -259,7 +245,7 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
     }
   }
 
-  Future<void> _showRemoveProductConfirmationDialog(int orcamentoProdutoId, String nomeProduto) async {
+  Future<void> _showRemoveProductConfirmationDialog(int productId, String nomeProduto) async {
     if (_isDeletingProduct || _isApproving || _isAddingProduct) return;
 
     return showDialog<void>(
@@ -286,8 +272,8 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
                 ),
                 TextButton(
                   onPressed: _isDeletingProduct ? null : () async {
-                    Navigator.of(dialogContext).pop(); 
-                    await _performRemoveProduct(orcamentoProdutoId);
+                    Navigator.of(dialogContext).pop();
+                    await _performRemoveProduct(productId);
                   },
                   child: _isDeletingProduct
                       ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
@@ -301,14 +287,15 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
     );
   }
 
-  Future<void> _performRemoveProduct(int orcamentoProdutoId) async {
+  Future<void> _performRemoveProduct(int productId) async {
     if(!mounted) return;
     setState(() {
       _isDeletingProduct = true;
     });
 
     try {
-      await _budgetDetailsService.removeProductFromBudget(orcamentoProdutoId);
+      await _budgetDetailsService.removeProductFromBudget(widget.budgetId, productId);
+
       if(!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -335,7 +322,6 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic>? dataSource = _detailedBudget ?? widget.budgetData;
@@ -345,9 +331,7 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
     final List<dynamic> produtosApi = _getSafe(_detailedBudget, ['produtos'], []);
     final String currentStatus = _getSafe(dataSource, ['status'], '').toLowerCase();
     final bool isFinalStatus = currentStatus == 'approved' || currentStatus == 'reproved' ||
-                               currentStatus == 'aprovado' || currentStatus == 'reprovado';
-    
-    // Desabilita ações principais se alguma operação estiver em andamento
+                              currentStatus == 'aprovado' || currentStatus == 'reprovado';
     final bool isActionInProgress = _isApproving || _isDeletingProduct || _isAddingProduct || _isSavingProduct;
 
     if (_isLoading && _detailedBudget == null) {
@@ -358,7 +342,7 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
         bottomNavigationBar: _buildBottomNav(context),
       );
     }
-    
+   
     if (_error != null && _detailedBudget == null) {
       return Scaffold(
         body: SafeArea(
@@ -397,7 +381,7 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
                     shape: BoxShape.circle,
                   ),
                   child: const Text(
-                    '3', 
+                    '3',
                     style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -430,7 +414,7 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
                         style: const TextStyle(fontSize: 16, color: Colors.black54),
                       ),
                       const SizedBox(height: 4),
-                      Text( 
+                      Text(
                         'Orçamento ID: ${widget.budgetId}',
                         style: const TextStyle(fontSize: 14, color: Colors.black45),
                       ),
@@ -440,7 +424,7 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
               ),
             ),
             Expanded(
-              child: _isLoading // Para recargas
+              child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _error != null && produtosApi.isEmpty
                       ? Center(
@@ -457,28 +441,27 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
                                 final double precoProdutoNum = _getSafe(produtoDataMap, ['valorUnitario'], 0.0);
                                 final String precoProduto = "R\$ ${precoProdutoNum.toStringAsFixed(2)}";
                                 final String descProduto = _getSafe(produtoDataMap, ['produto', 'descricao'], '');
+                                final int produtoId = _getSafe(produtoDataMap, ['produto', 'id'], 0);
                                 final int orcamentoProdutoId = _getSafe(produtoDataMap, ['id'], 0);
 
                                 return Padding(
-                                  padding: const EdgeInsets.only(bottom:16.0), 
+                                  padding: const EdgeInsets.only(bottom:16.0),
                                   child: _buildCardProduto(
                                     nomeProduto: nomeProduto,
                                     preco: precoProduto,
                                     descricao: descProduto,
                                     orcamentoProdutoId: orcamentoProdutoId,
-                                    // Desabilita o botão de deletar se uma ação estiver em progresso
-                                    onDeletePressed: (orcamentoProdutoId != 0 && !isFinalStatus && !isActionInProgress)
-                                        ? () => _showRemoveProductConfirmationDialog(orcamentoProdutoId, nomeProduto)
+                                    onDeletePressed: (produtoId != 0 && !isFinalStatus && !isActionInProgress)
+                                        ? () => _showRemoveProductConfirmationDialog(produtoId, nomeProduto)
                                         : null,
                                   ),
                                 );
                               }
                               return const SizedBox.shrink();
                             }).toList(),
-                            
-                            // --- NOVO: Mostra o card de adição ou o botão '+' ---
+                           
                             if (!isFinalStatus)
-                               _isAddingProduct
+                              _isAddingProduct
                                 ? _buildAddProductCard()
                                 : Center(
                                     child: ElevatedButton(
@@ -487,7 +470,6 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
                                         padding: const EdgeInsets.all(20),
                                         backgroundColor: Colors.green,
                                       ),
-                                      // Desabilita o botão se qualquer ação estiver em andamento
                                       onPressed: isActionInProgress ? null : _showAddProductForm,
                                       child: _isLoadingProducts
                                         ? const SizedBox(width: 30, height: 30, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3,))
@@ -506,11 +488,11 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: (isFinalStatus || isActionInProgress) ? null : () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsReproval(budgetId: widget.budgetId,))); 
+                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => BudgetsReproval(budgetId: widget.budgetId,)));
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
-                        disabledBackgroundColor: Colors.red.shade200, 
+                        disabledBackgroundColor: Colors.red.shade200,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -528,13 +510,13 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
                       onPressed: (isFinalStatus || isActionInProgress) ? null : _showApprovalConfirmationDialog,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
-                        disabledBackgroundColor: Colors.green.shade200, 
+                        disabledBackgroundColor: Colors.green.shade200,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: _isApproving 
+                      child: _isApproving
                           ? const SizedBox(
                               height: 20,
                               width: 20,
@@ -555,7 +537,6 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
     );
   }
 
-  // --- NOVO WIDGET PARA O CARD DE ADIÇÃO DE PRODUTO ---
   Widget _buildAddProductCard() {
     return Card(
       shape: RoundedRectangleBorder(
@@ -573,7 +554,6 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
             children: [
               const Text('Adicionar Novo Produto', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
-              // Dropdown para selecionar o produto
               DropdownButtonFormField<int>(
                 value: _selectedProductId,
                 hint: const Text('Selecione um produto'),
@@ -601,7 +581,6 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Campo para o valor unitário
               TextFormField(
                 controller: _valorUnitarioController,
                 decoration: const InputDecoration(
@@ -610,7 +589,6 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
                   prefixText: 'R\$ ',
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                // Permite apenas números, vírgulas e pontos.
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d+[,.]?\d{0,2}')),
                 ],
@@ -625,7 +603,6 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
                 },
               ),
               const SizedBox(height: 16),
-              // Campo para o fornecedor
               TextFormField(
                 controller: _fornecedorController,
                 decoration: const InputDecoration(
@@ -640,7 +617,6 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
                 },
               ),
               const SizedBox(height: 24),
-              // Botões de ação
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -666,9 +642,8 @@ class _BudgetsDetailsState extends State<BudgetsDetails> {
   }
 }
 
-// Helper para o BottomNavigationBar
 Widget _buildBottomNav(BuildContext context) {
-  return BottomNavigationBar( 
+  return BottomNavigationBar(
     items: [
       const BottomNavigationBarItem(
         icon: Icon(Icons.build),
@@ -676,10 +651,10 @@ Widget _buildBottomNav(BuildContext context) {
       ),
       BottomNavigationBarItem(
         icon: SvgPicture.asset(
-          'lib/assets/images/logoorcamentos.svg', 
+          'lib/assets/images/logoorcamentos.svg',
           width: 24,
           height: 24,
-          colorFilter: const ColorFilter.mode(Colors.green, BlendMode.srcIn), 
+          colorFilter: const ColorFilter.mode(Colors.green, BlendMode.srcIn),
         ),
         label: 'Orçamentos',
       ),
@@ -689,12 +664,12 @@ Widget _buildBottomNav(BuildContext context) {
       ),
     ],
     selectedItemColor: Colors.green,
-    currentIndex: 1, 
+    currentIndex: 1,
     onTap: (index) {
         if (index == 0) { /* Lógica para Manutenções */ }
-        else if (index == 1) { 
+        else if (index == 1) {
             Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => BudgetsListage()), 
+                MaterialPageRoute(builder: (context) => BudgetsListage()),
                 (route) => false
             );
         }
@@ -703,13 +678,12 @@ Widget _buildBottomNav(BuildContext context) {
   );
 }
 
-// Widget para o Card de Produto (com o botão de deletar desabilitável)
 Widget _buildCardProduto({
   required String nomeProduto,
   required String preco,
   required String descricao,
   required int orcamentoProdutoId,
-  required VoidCallback? onDeletePressed, // Torna o callback anulável
+  required VoidCallback? onDeletePressed,
 }) {
   return Card(
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -721,7 +695,7 @@ Widget _buildCardProduto({
         children: [
           Row(
             children: [
-              Expanded( 
+              Expanded(
                 child: Text(
                   nomeProduto,
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
@@ -741,17 +715,14 @@ Widget _buildCardProduto({
               style: const TextStyle(fontSize: 14, color: Colors.black54),
             ),
           const SizedBox(height: 8),
-          Align( 
+          Align(
             alignment: Alignment.centerRight,
-            // Usa um InkWell para o efeito visual e GestureDetector para o clique
-            // que pode ser desabilitado.
             child: GestureDetector(
-              onTap: onDeletePressed, // O clique só funciona se onDeletePressed não for nulo
+              onTap: onDeletePressed,
               child: InkWell(
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
                   decoration: BoxDecoration(
-                    // Muda a cor para indicar que está desabilitado
                     color: onDeletePressed != null ? Colors.red : Colors.grey,
                     borderRadius: BorderRadius.circular(8)
                   ),
