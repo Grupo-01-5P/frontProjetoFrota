@@ -20,6 +20,7 @@ class _ViewInoperativeState extends State<ViewInoperative> {
   bool isLoading = true;
   Map<String, dynamic>? inoperanteData;
   String? faseAtual;
+  bool faseIniciada = false;  // Novo controle para saber se a fase foi iniciada
 
   String userFuncao = '';
   String userNome = '';
@@ -31,6 +32,15 @@ class _ViewInoperativeState extends State<ViewInoperative> {
     'FASE2': 1,
     'FASE3': 2,
     'FASE4': 3,
+    'FASE5': 4, // Fase fantasma para controle de conclusão
+  };
+
+  // Novo mapa para controlar o estado de cada fase
+  final Map<String, String> estadoFases = {
+    'FASE1': 'nao_iniciada',  // nao_iniciada -> iniciada -> concluida
+    'FASE2': 'nao_iniciada',
+    'FASE3': 'nao_iniciada',
+    'FASE4': 'nao_iniciada',
   };
 
   final List<String> titles = [
@@ -38,6 +48,7 @@ class _ViewInoperativeState extends State<ViewInoperative> {
     "Deixar veículo para manutenção",
     "Serviço finalizado",
     "Retorno com veículo",
+    "", // Título vazio para FASE5
   ];
 
   final List<String> addresses = [
@@ -45,6 +56,7 @@ class _ViewInoperativeState extends State<ViewInoperative> {
     "Inicie e conclua esta etapa quando o veículo for deixado na mecânica",
     "Inicie e conclua esta etapa quando a manutenção do veículo for finalizada",
     "Clique em iniciar para registrar o percurso até o ponto de origem",
+    "", // Descrição vazia para FASE5
   ];
 
   final List<String> titlesAnalista = [
@@ -52,6 +64,7 @@ class _ViewInoperativeState extends State<ViewInoperative> {
     "Serviço em andamento",
     "Serviço finalizado",
     "Chegada no destino de origem",
+    "", // Título vazio para FASE5
   ];
 
   final List<String> descriptionsAnalista = [
@@ -59,6 +72,7 @@ class _ViewInoperativeState extends State<ViewInoperative> {
     "O serviço está sendo executado conforme cronograma.",
     "A manutenção foi realizada. Aguardando retorno.",
     "O veículo retornou à origem com sucesso.",
+    "", // Descrição vazia para FASE5
   ];
 
   @override
@@ -71,10 +85,25 @@ class _ViewInoperativeState extends State<ViewInoperative> {
 
   Future<void> fetchInoperanteDetails() async {
     try {
-      final token = await _secureStorage.read(key: 'token');
+      final token = await _secureStorage.read(key: 'auth_token');
+      
+      if (token == null || token.isEmpty) {
+        print('Token não encontrado');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erro de autenticação. Por favor, faça login novamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      print('Token: $token');
+      print('URL: http://localhost:4040/inoperative/${widget.inoperanteId}');
+
       final response = await http.get(
         Uri.parse(
-          'http://localhost:4040/inoperative/inoperative/${widget.inoperanteId}',
+          'http://localhost:4040/inoperative/${widget.inoperanteId}',
         ),
         headers: {
           'Authorization': 'Bearer $token',
@@ -82,28 +111,77 @@ class _ViewInoperativeState extends State<ViewInoperative> {
         },
       );
 
+      print('Status code detalhes: ${response.statusCode}');
+      print('Resposta detalhes: ${response.body}');
+
       if (response.statusCode == 200) {
-        setState(() {
-          inoperanteData = json.decode(response.body);
-          isLoading = false;
-        });
+        final responseData = json.decode(response.body);
+        if (responseData['success'] == true) {
+          setState(() {
+            inoperanteData = responseData['data'];
+            isLoading = false;
+          });
+        } else {
+          throw Exception(responseData['message'] ?? 'Erro desconhecido');
+        }
+      } else if (response.statusCode == 401) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sessão expirada. Por favor, faça login novamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } else if (response.statusCode == 404) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Veículo não encontrado'),
+            backgroundColor: Colors.red,
+          ),
+        );
       } else {
+        final errorData = json.decode(response.body);
         setState(() {
           isLoading = false;
         });
-        // Tratar erro aqui
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorData['message'] ?? 'Erro ao carregar detalhes do veículo'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } catch (e) {
+      print('Erro ao buscar detalhes: $e');
       setState(() {
         isLoading = false;
       });
-      // Tratar erro aqui
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   Future<void> fetchPhaseInfo() async {
     try {
-      final token = await _secureStorage.read(key: 'token');
+      final token = await _secureStorage.read(key: 'auth_token');
+      
+      if (token == null || token.isEmpty) {
+        print('Token não encontrado');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erro de autenticação. Por favor, faça login novamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      print('Token: $token');
+      print('URL: http://localhost:4040/inoperative/${widget.inoperanteId}/phase');
+
       final response = await http.get(
         Uri.parse(
           'http://localhost:4040/inoperative/${widget.inoperanteId}/phase',
@@ -114,28 +192,115 @@ class _ViewInoperativeState extends State<ViewInoperative> {
         },
       );
 
+      print('Status code fase: ${response.statusCode}');
+      print('Resposta fase: ${response.body}');
+
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          faseAtual = data['faseAtual'];
-          isLoading = false;
-        });
+        final responseData = json.decode(response.body);
+        if (responseData['success'] == true && responseData['data'] != null) {
+          setState(() {
+            faseAtual = responseData['data']['faseAtual'];
+            
+            // Inicializa os estados das fases anteriores como concluídas
+            for (var fase in fasesEnum.keys) {
+              if (fasesEnum[fase]! < fasesEnum[faseAtual]!) {
+                estadoFases[fase] = 'concluida';
+              }
+            }
+
+            // Configura o estado da fase atual
+            if (faseAtual == 'FASE2') {
+              estadoFases[faseAtual!] = 'iniciada';
+            } else if (faseAtual == 'FASE4' && userFuncao == 'supervisor') {
+              // Garante que a Fase 4 comece como não iniciada para o supervisor
+              estadoFases[faseAtual!] = 'nao_iniciada';
+            } else {
+              // Se não houver estado definido, inicializa como não iniciada
+              estadoFases[faseAtual!] ??= 'nao_iniciada';
+            }
+
+            isLoading = false;
+          });
+          print('Fase atual atualizada: $faseAtual');
+          print('Estados das fases: $estadoFases');
+        } else {
+          print('Resposta inválida: $responseData');
+          throw Exception(responseData['message'] ?? 'Resposta inválida do servidor');
+        }
+      } else if (response.statusCode == 401) {
+        print('Erro de autenticação');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sessão expirada. Por favor, faça login novamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
       } else {
+        final errorData = json.decode(response.body);
+        print('Erro na requisição: ${errorData['message']}');
         setState(() {
           isLoading = false;
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorData['message'] ?? 'Erro ao carregar fase atual'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } catch (e) {
+      print('Erro ao buscar fase: $e');
       setState(() {
         isLoading = false;
       });
-      print('Erro ao buscar fase: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao buscar fase: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
-  Future<void> updatePhase(String novaFase) async {
+  Future<void> updatePhase(String novaFase, {bool isInicio = false}) async {
     try {
-      final token = await _secureStorage.read(key: 'token');
+      setState(() {
+        isLoading = true;
+      });
+
+      final token = await _secureStorage.read(key: 'auth_token');
+      
+      if (token == null || token.isEmpty) {
+        print('Token não encontrado');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erro de autenticação. Por favor, faça login novamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Se for início de fase, apenas atualiza o estado local
+      // Apenas para Fase 1 e Fase 4
+      if (isInicio && (faseAtual == 'FASE1' || faseAtual == 'FASE4')) {
+        setState(() {
+          faseIniciada = true;
+          estadoFases[faseAtual!] = 'iniciada';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Fase iniciada com sucesso!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        return;
+      }
+
+      print('Token: $token');
+      print('URL: http://localhost:4040/inoperative/${widget.inoperanteId}/phase');
+      print('Dados enviados: ${json.encode({'fase': novaFase})}');
+
       final response = await http.put(
         Uri.parse(
           'http://localhost:4040/inoperative/${widget.inoperanteId}/phase',
@@ -147,16 +312,143 @@ class _ViewInoperativeState extends State<ViewInoperative> {
         body: json.encode({'fase': novaFase}),
       );
 
+      print('Status code atualização: ${response.statusCode}');
+      print('Resposta atualização: ${response.body}');
+
       if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        if (responseData['success'] == true) {
+          setState(() {
+            // Marca a fase atual como concluída
+            estadoFases[faseAtual!] = 'concluida';
+            
+            // Se estiver concluindo a FASE4, avança para FASE5
+            if (faseAtual == 'FASE4' && !isInicio) {
+              novaFase = 'FASE5';
+            }
+            
+            // Atualiza para a nova fase
+            faseAtual = novaFase;
+            // Reset do estado de início para a nova fase
+            faseIniciada = false;
+            
+            // Se a próxima fase for a Fase 2, já começa como iniciada
+            if (novaFase == 'FASE2') {
+              estadoFases[novaFase] = 'iniciada';
+            }
+            
+            isLoading = false;
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(responseData['message'] ?? 'Fase atualizada com sucesso!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Atualiza os detalhes do veículo após mudar a fase
+          await fetchInoperanteDetails();
+          await fetchPhaseInfo();
+        } else {
+          throw Exception(responseData['message'] ?? 'Erro desconhecido');
+        }
+      } else if (response.statusCode == 401) {
         setState(() {
-          faseAtual = novaFase;
+          isLoading = false;
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sessão expirada. Por favor, faça login novamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
       } else {
-        // Tratar erro aqui
-        print('Erro ao atualizar fase');
+        final errorData = json.decode(response.body);
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorData['message'] ?? 'Erro ao atualizar fase do veículo'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } catch (e) {
       print('Erro ao atualizar fase: $e');
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao atualizar fase: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // Método auxiliar para confirmar mudança de fase
+  Future<void> confirmarMudancaFase(String novaFase, {bool isInicio = false}) async {
+    String titulo;
+    String mensagem;
+
+    // Personaliza as mensagens de acordo com a fase
+    switch (faseAtual) {
+      case 'FASE1':
+        if (isInicio) {
+          titulo = 'Iniciar viagem';
+          mensagem = 'Deseja iniciar a viagem até a mecânica?';
+        } else {
+          titulo = 'Confirmar chegada';
+          mensagem = 'Confirma que chegou à mecânica?';
+        }
+        break;
+      case 'FASE2':
+        titulo = 'Confirmar entrega';
+        mensagem = 'Confirma que o veículo foi entregue para manutenção?';
+        break;
+      case 'FASE3':
+        titulo = 'Confirmar finalização';
+        mensagem = 'Confirma que o serviço foi finalizado?';
+        break;
+      case 'FASE4':
+        if (isInicio) {
+          titulo = 'Iniciar retorno';
+          mensagem = 'Deseja iniciar o retorno com o veículo?';
+        } else {
+          titulo = 'Confirmar conclusão';
+          mensagem = 'Confirma que o veículo retornou ao ponto de origem?';
+        }
+        break;
+      default:
+        titulo = isInicio ? 'Iniciar fase' : 'Confirmar mudança de fase';
+        mensagem = isInicio ? 'Deseja iniciar esta fase?' : 'Deseja realmente concluir esta fase?';
+    }
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(titulo),
+          content: Text(mensagem),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () => Navigator.of(context).pop(false),
+            ),
+            TextButton(
+              child: Text(isInicio ? 'Iniciar' : 'Confirmar'),
+              onPressed: () => Navigator.of(context).pop(true),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == true) {
+      await updatePhase(novaFase, isInicio: isInicio);
     }
   }
 
@@ -218,7 +510,7 @@ class _ViewInoperativeState extends State<ViewInoperative> {
               const SizedBox(height: 20),
               Expanded(
                 child: ListView.builder(
-                  itemCount: 4,
+                  itemCount: 5,
                   itemBuilder: (context, index) {
                     if (userFuncao == 'supervisor') {
                       return buildVehicleCard(index);
@@ -298,27 +590,66 @@ class _ViewInoperativeState extends State<ViewInoperative> {
   }
 
   Widget buildVehicleCard(int index) {
-    String buttonText;
-    Color buttonColor;
+    // Não exibe o card da FASE5
+    if (index == 4) return Container();
+
+    // Inicialização com valores padrão
+    String buttonText = "Aguardando";
+    Color buttonColor = Colors.grey;
+    bool buttonEnabled = false;
 
     // Verifica se é a fase atual
     bool isFaseAtual = faseAtual != null && fasesEnum[faseAtual] == index;
     // Verifica se é uma fase anterior à atual
     bool isFaseAnterior = faseAtual != null && fasesEnum[faseAtual]! > index;
 
+    // Define o estado do botão baseado na fase atual e se foi iniciada
     if (isFaseAnterior) {
       buttonText = "Concluído";
       buttonColor = Colors.green;
+      buttonEnabled = false;
     } else if (isFaseAtual) {
-      buttonText = "Concluir";
-      buttonColor = Colors.amber;
-    } else {
-      buttonText = "Iniciar";
-      buttonColor = Colors.grey;
+      // Comportamento específico para cada fase
+      switch (index) {
+        case 0: // Fase 1 - comportamento original
+          if (estadoFases[faseAtual!] == 'nao_iniciada') {
+            buttonText = "Iniciar";
+            buttonColor = Colors.blue;
+            buttonEnabled = true;
+          } else {
+            buttonText = "Concluir";
+            buttonColor = Colors.amber;
+            buttonEnabled = true;
+          }
+          break;
+        
+        case 1: // Fase 2 - começa com Concluir
+          buttonText = "Concluir";
+          buttonColor = Colors.amber;
+          buttonEnabled = true;
+          break;
+        
+        case 2: // Fase 3 - Aguardando e bloqueado para supervisor
+          buttonText = "Aguardando";
+          buttonColor = Colors.grey;
+          buttonEnabled = false; // Sempre desabilitado para supervisor
+          break;
+        
+        case 3: // Fase 4 - mesmo modelo da fase 1
+          if (estadoFases[faseAtual!] == 'nao_iniciada') {
+            buttonText = "Iniciar";
+            buttonColor = Colors.blue;
+            buttonEnabled = true;
+          } else {
+            buttonText = "Concluir";
+            buttonColor = Colors.amber;
+            buttonEnabled = true;
+          }
+          break;
+      }
     }
 
-    bool isActive =
-        index == 0 || (faseAtual != null && fasesEnum[faseAtual]! >= index - 1);
+    bool isActive = index == 0 || (faseAtual != null && fasesEnum[faseAtual]! >= index - 1);
 
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
@@ -349,13 +680,16 @@ class _ViewInoperativeState extends State<ViewInoperative> {
             const SizedBox(height: 12),
             Center(
               child: ElevatedButton(
-                onPressed:
-                    (isActive && !isFaseAnterior && userFuncao == 'supervisor')
-                        ? () {
+                onPressed: (buttonEnabled && userFuncao == 'supervisor')
+                    ? () {
+                        if (buttonText == "Iniciar") {
+                          confirmarMudancaFase(faseAtual!, isInicio: true);
+                        } else if (buttonText == "Concluir") {
                           String proximaFase = 'FASE${index + 2}';
-                          updatePhase(proximaFase);
+                          confirmarMudancaFase(proximaFase);
                         }
-                        : null,
+                      }
+                    : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: buttonColor,
                   foregroundColor: Colors.white,
@@ -379,32 +713,84 @@ class _ViewInoperativeState extends State<ViewInoperative> {
   }
 
   Widget buildAnalistaCard(int index) {
+    // Não exibe o card da FASE5
+    if (index == 4) return Container();
+
     // Verifica se é a fase atual
     bool isFaseAtual = faseAtual != null && fasesEnum[faseAtual] == index;
     // Verifica se é uma fase anterior à atual
     bool isFaseAnterior = faseAtual != null && fasesEnum[faseAtual]! > index;
-    // Verifica se o supervisor está na fase de serviço finalizado
-    bool supervisorEmFase3 = faseAtual == 'FASE3';
 
-    // Define o texto e cor do botão baseado no status
-    String buttonText;
-    Color buttonColor;
+    // Inicialização com valores padrão
+    String buttonText = "Aguardando";
+    Color buttonColor = Colors.grey;
+    bool buttonEnabled = false;
 
     if (isFaseAnterior) {
       buttonText = "Concluído";
       buttonColor = Colors.green;
     } else if (isFaseAtual) {
-      buttonText = "Em Andamento";
-      buttonColor = Colors.amber;
-    } else {
-      buttonText = "Aguardando";
-      buttonColor = Colors.grey;
+      // Comportamento específico para cada fase
+      switch (index) {
+        case 0: // Fase 1
+          if (estadoFases[faseAtual!] == 'nao_iniciada') {
+            buttonText = "Aguardando Início";
+            buttonColor = Colors.grey;
+          } else if (estadoFases[faseAtual!] == 'iniciada') {
+            buttonText = "Em Andamento";
+            buttonColor = Colors.amber;
+          } else {
+            buttonText = "Concluído";
+            buttonColor = Colors.green;
+          }
+          break;
+        
+        case 1: // Fase 2 - começa com Em Andamento
+          if (estadoFases[faseAtual!] == 'concluida') {
+            buttonText = "Concluído";
+            buttonColor = Colors.green;
+          } else {
+            buttonText = "Em Andamento";
+            buttonColor = Colors.amber;
+          }
+          break;
+        
+        case 2: // Fase 3 - Analista pode concluir
+          if (estadoFases[faseAtual!] == 'concluida') {
+            buttonText = "Concluído";
+            buttonColor = Colors.green;
+          } else {
+            buttonText = "Concluir";
+            buttonColor = Colors.amber;
+            buttonEnabled = true; // Apenas o analista pode concluir esta fase
+          }
+          break;
+        
+        case 3: // Fase 4
+          buttonText = "Em Andamento";
+          buttonColor = Colors.amber;
+          break;
+      }
     }
 
-    // Para a fase 3 (índice 2), configuração especial quando está ativa
-    if (index == 2 && isFaseAtual) {
-      buttonText = "Concluir";
-      buttonColor = Colors.amber;
+    // Atualiza a descrição baseada no estado atual da fase
+    String descricaoAtual = descriptionsAnalista[index];
+    if (isFaseAtual) {
+      switch (estadoFases[faseAtual!]) {
+        case 'nao_iniciada':
+          descricaoAtual = "Aguardando início da fase.";
+          break;
+        case 'iniciada':
+          descricaoAtual = descriptionsAnalista[index];
+          break;
+        case 'concluida':
+          descricaoAtual = "Fase concluída com sucesso.";
+          break;
+        default:
+          descricaoAtual = descriptionsAnalista[index];
+      }
+    } else if (isFaseAnterior) {
+      descricaoAtual = "Fase concluída com sucesso.";
     }
 
     return Card(
@@ -434,7 +820,7 @@ class _ViewInoperativeState extends State<ViewInoperative> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  descriptionsAnalista[index],
+                  descricaoAtual,
                   style: TextStyle(
                     fontSize: 16,
                     color: isFaseAtual ? Colors.black : Colors.black54,
@@ -447,14 +833,12 @@ class _ViewInoperativeState extends State<ViewInoperative> {
               bottom: 0,
               right: 0,
               child: ElevatedButton(
-                onPressed:
-                    (index == 2 &&
-                            isFaseAtual) // Só habilita o botão na fase 3 quando ativa
-                        ? () {
-                          String proximaFase = 'FASE${index + 2}';
-                          updatePhase(proximaFase);
-                        }
-                        : null,
+                onPressed: buttonEnabled && index == 2 && isFaseAtual
+                    ? () {
+                        String proximaFase = 'FASE${index + 2}';
+                        confirmarMudancaFase(proximaFase);
+                      }
+                    : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: buttonColor,
                   foregroundColor: Colors.white,

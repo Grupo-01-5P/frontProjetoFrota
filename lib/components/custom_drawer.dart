@@ -207,7 +207,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
           const SizedBox(height: 8),
 
           // Veículos inoperantes - Apenas para Analista
-          if (isAnalista)
+          if (isAnalista || isSupervisor)
             widget.useCustomIcons
                 ? _buildDrawerItemWithImage(
                   imageAsset: 'lib/assets/images/iconInoperantes.png',

@@ -18,39 +18,143 @@ class _InoperativeState extends State<Inoperative> {
   List<dynamic> inoperantes = [];
   bool isLoading = true;
   String? searchQuery;
+  int currentPage = 1;
+  bool hasMoreItems = true;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     fetchInoperantes();
+    _scrollController.addListener(_onScroll);
   }
 
-  Future<void> fetchInoperantes() async {
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+      if (!isLoading && hasMoreItems) {
+        currentPage++;
+        fetchInoperantes(isLoadMore: true);
+      }
+    }
+  }
+
+  Future<String?> getValidToken() async {
     try {
-      final token = await _secureStorage.read(key: 'token');
+      final token = await _secureStorage.read(key: 'auth_token');
+      if (token == null || token.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sessão expirada. Por favor, faça login novamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        // TODO: Redirecionar para tela de login
+        return null;
+      }
+      return token;
+    } catch (e) {
+      print('Erro ao buscar token: $e');
+      return null;
+    }
+  }
+
+  Future<void> fetchInoperantes({bool isLoadMore = false}) async {
+    if (!isLoadMore) {
+      setState(() {
+        isLoading = true;
+      });
+    }
+
+    try {
+      final token = await getValidToken();
+      if (token == null) return;
+
+      print('URL: http://localhost:4040/inoperative?_page=$currentPage&_limit=10');
+
       final response = await http.get(
-        Uri.parse('http://localhost:4040/inoperative/inoperative'),
+        Uri.parse('http://localhost:4040/inoperative?_page=$currentPage&_limit=10'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
       );
 
+      print('Status code: ${response.statusCode}');
+      print('Resposta: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          inoperantes = data['data'];
+          if (isLoadMore) {
+            inoperantes.addAll(data['data']);
+          } else {
+            inoperantes = data['data'];
+          }
+          hasMoreItems = data['meta']['hasNextPage'];
           isLoading = false;
         });
+      } else if (response.statusCode == 401) {
+        setState(() {
+          isLoading = false;
+        });
+        await _secureStorage.delete(key: 'auth_token');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sessão expirada. Por favor, faça login novamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        // TODO: Redirecionar para tela de login
       } else {
         setState(() {
           isLoading = false;
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao carregar veículos inoperantes: ${response.statusCode}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Tentar Novamente',
+              textColor: Colors.white,
+              onPressed: () {
+                if (!isLoadMore) {
+                  currentPage = 1;
+                }
+                fetchInoperantes(isLoadMore: isLoadMore);
+              },
+            ),
+          ),
+        );
       }
     } catch (e) {
+      print('Erro na requisição: $e');
       setState(() {
         isLoading = false;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao carregar dados: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'Tentar Novamente',
+            textColor: Colors.white,
+            onPressed: () {
+              if (!isLoadMore) {
+                currentPage = 1;
+              }
+              fetchInoperantes(isLoadMore: isLoadMore);
+            },
+          ),
+        ),
+      );
     }
   }
 
@@ -58,6 +162,204 @@ class _InoperativeState extends State<Inoperative> {
     setState(() {
       searchQuery = query.isEmpty ? null : query.toUpperCase();
     });
+  }
+
+  Future<int?> createInoperante(int veiculoId) async {
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      
+      if (token == null || token.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erro de autenticação. Por favor, faça login novamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return null;
+      }
+
+      final response = await http.post(
+        Uri.parse('http://localhost:4040/inoperative/vehicle/$veiculoId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 201) {
+        final data = json.decode(response.body);
+        return data['data']['id'] as int;
+      } else if (response.statusCode == 401) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sessão expirada. Por favor, faça login novamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return null;
+      } else {
+        throw Exception('Falha ao criar inoperante');
+      }
+    } catch (e) {
+      print('Erro ao criar inoperante: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erro ao criar inoperante. Tente novamente.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getExistingInoperante(int veiculoId) async {
+    try {
+      final token = await getValidToken();
+      if (token == null) return null;
+
+      final response = await http.get(
+        Uri.parse('http://localhost:4040/inoperative/check/$veiculoId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      print('Status code da verificação: ${response.statusCode}');
+      print('Resposta da verificação: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['data'];
+      } else if (response.statusCode == 401) {
+        await _secureStorage.delete(key: 'auth_token');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sessão expirada. Por favor, faça login novamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        // TODO: Redirecionar para tela de login
+      }
+      
+      return null;
+    } catch (e) {
+      print('Erro ao verificar inoperante: $e');
+      return null;
+    }
+  }
+
+  Future<void> handleVehicleSelection(dynamic veiculo) async {
+    try {
+      print('Selecionando veículo: ${veiculo.toString()}');
+      setState(() {
+        isLoading = true;
+      });
+
+      if (veiculo == null || veiculo['id'] == null) {
+        print('Erro: Veículo ou ID do veículo é nulo');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erro ao selecionar veículo'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final token = await getValidToken();
+      if (token == null) return;
+
+      final veiculoId = veiculo['id'] as int;
+      print('Verificando se veículo $veiculoId já está inoperante');
+      
+      // Primeiro, tenta buscar um inoperante existente
+      final existingInoperante = await getExistingInoperante(veiculoId);
+      
+      if (existingInoperante != null) {
+        print('Inoperante existente encontrado: ${existingInoperante['id']}');
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ViewInoperative(
+              inoperanteId: existingInoperante['id'] as int,
+            ),
+          ),
+        );
+        return;
+      }
+
+      print('Criando novo inoperante para veículo $veiculoId');
+      final response = await http.post(
+        Uri.parse('http://localhost:4040/inoperative/vehicle/$veiculoId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      print('Status code da criação: ${response.statusCode}');
+      print('Resposta da criação: ${response.body}');
+
+      if (response.statusCode == 201) {
+        final data = json.decode(response.body);
+        final inoperanteId = data['data']['id'] as int;
+        print('Inoperante criado com ID: $inoperanteId');
+        
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ViewInoperative(
+              inoperanteId: inoperanteId,
+            ),
+          ),
+        );
+      } else if (response.statusCode == 400) {
+        // Se já existe um inoperante ativo
+        final data = json.decode(response.body);
+        if (data['data']?['id'] != null) {
+          print('Inoperante já existe, navegando para ele: ${data['data']['id']}');
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ViewInoperative(
+                inoperanteId: data['data']['id'] as int,
+              ),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(data['message'] ?? 'Erro ao processar veículo'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } else if (response.statusCode == 401) {
+        await _secureStorage.delete(key: 'auth_token');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sessão expirada. Por favor, faça login novamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        // TODO: Redirecionar para tela de login
+      } else {
+        throw Exception('Falha ao processar veículo');
+      }
+    } catch (e) {
+      print('Erro ao selecionar veículo: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao processar veículo: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
@@ -186,22 +488,28 @@ class _InoperativeState extends State<Inoperative> {
                           child: Text('Nenhum veículo inoperante encontrado'),
                         )
                         : ListView.builder(
-                          itemCount: filteredInoperantes.length,
+                          itemCount: filteredInoperantes.length + (hasMoreItems ? 1 : 0),
+                          controller: _scrollController,
                           itemBuilder: (context, index) {
+                            if (index == filteredInoperantes.length) {
+                              return const Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
+                            }
+
                             final inoperante = filteredInoperantes[index];
                             final veiculo = inoperante['veiculo'];
+                            final oficina = inoperante['oficina'];
+                            final supervisor = inoperante['supervisor'];
 
                             return InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => ViewInoperative(
-                                          inoperanteId: inoperante['id'] as int,
-                                        ),
-                                  ),
-                                );
+                              onTap: () async {
+                                print('Card clicado. Dados do veículo:');
+                                print(veiculo.toString());
+                                await handleVehicleSelection(veiculo);
                               },
                               child: Card(
                                 color: Colors.white,
@@ -213,22 +521,20 @@ class _InoperativeState extends State<Inoperative> {
                                 child: Padding(
                                   padding: const EdgeInsets.all(16),
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            veiculo['placa'],
+                                            veiculo['placa'] ?? 'Sem placa',
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w900,
                                               fontSize: 20,
                                             ),
                                           ),
                                           Text(
-                                            "${veiculo['marca']} ${veiculo['modelo']} ${veiculo['anoModelo']}",
+                                            "${veiculo['marca'] ?? ''} ${veiculo['modelo'] ?? ''} ${veiculo['anoModelo'] ?? ''}",
                                             style: const TextStyle(
                                               fontSize: 16,
                                             ),
@@ -237,21 +543,20 @@ class _InoperativeState extends State<Inoperative> {
                                       ),
                                       const SizedBox(height: 10),
                                       Text(
-                                        veiculo['cor'],
+                                        veiculo['cor'] ?? 'Cor não informada',
                                         style: const TextStyle(fontSize: 14),
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        veiculo['empresa'],
+                                        veiculo['empresa'] ?? 'Empresa não informada',
                                         style: const TextStyle(fontSize: 14),
                                       ),
                                       const SizedBox(height: 8),
                                       Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            veiculo['departamento'],
+                                            veiculo['departamento'] ?? 'Departamento não informado',
                                             style: const TextStyle(
                                               fontSize: 14,
                                             ),
@@ -263,15 +568,12 @@ class _InoperativeState extends State<Inoperative> {
                                               horizontal: 12,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: const Color(
-                                                0xFFFFAC26,
-                                              ).withOpacity(0.7),
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
+                                              color: const Color(0xFFFFAC26).withOpacity(0.7),
+                                              borderRadius: BorderRadius.circular(20),
                                             ),
-                                            child: const Text(
-                                              "Inoperante",
-                                              style: TextStyle(
+                                            child: Text(
+                                              inoperante['status']?.toUpperCase() ?? "INOPERANTE",
+                                              style: const TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 14,
                                               ),
@@ -279,6 +581,20 @@ class _InoperativeState extends State<Inoperative> {
                                           ),
                                         ],
                                       ),
+                                      if (oficina != null) ...[
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          "Oficina: ${oficina['cidade'] ?? ''} - ${oficina['estado'] ?? ''}",
+                                          style: const TextStyle(fontSize: 14),
+                                        ),
+                                      ],
+                                      if (supervisor != null) ...[
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          "Supervisor: ${supervisor['nome'] ?? 'Não atribuído'} (${supervisor['email'] ?? 'Sem email'})",
+                                          style: const TextStyle(fontSize: 14),
+                                        ),
+                                      ],
                                     ],
                                   ),
                                 ),
