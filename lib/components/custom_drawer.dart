@@ -8,6 +8,7 @@ import 'package:front_projeto_flutter/screens/maintenences/firstPage.dart';
 import 'package:front_projeto_flutter/screens/supervisor/maintenences/firstPage.dart';
 import 'package:front_projeto_flutter/screens/users/firstPage.dart';
 import 'package:front_projeto_flutter/screens/mechanics/mechanics_home_page.dart';
+import 'package:front_projeto_flutter/screens/budgets/budgets_page.dart';
 import 'package:front_projeto_flutter/screens/products/products.dart';
 // Corrigido: Import específico para VehiclesPage principal
 import 'package:front_projeto_flutter/screens/vehicles/vehicles_page.dart';
@@ -139,32 +140,24 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   imageAsset: 'lib/assets/images/iconTerceirize.png',
                   text: 'Orçamentos',
                   onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-
-                    // Navegação para a tela de orçamentos
-                    // Quando implementada, substitua este código:
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em desenvolvimento'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    if (ModalRoute.of(context)?.settings.name != '/budgets_page') {
+                     Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (context) => BudgetsPage()));
+                } else {
+                    Navigator.pop(context); 
+                }
                   },
                 )
                 : _buildDrawerItemWithIcon(
                   icon: Icons.request_quote,
                   text: 'Orçamentos',
                   onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-
-                    // Navegação para a tela de orçamentos
-                    // Quando implementada, substitua este código:
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em desenvolvimento'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    if (ModalRoute.of(context)?.settings.name != '/budgets_page') {
+                     Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (context) => BudgetsPage()));
+                } else {
+                    Navigator.pop(context); 
+                }
                   },
                 ),
           if (isAnalista) const SizedBox(height: 8),

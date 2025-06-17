@@ -79,6 +79,7 @@ flutter:
     - lib/assets/images/iconMenu.png
     - lib/assets/images/tire.png
     - lib/assets/images/logo.png
+    - lib/assets/images/logoorcamentos.svg
 
   #   - images/a_dot_ham.jpeg
 
