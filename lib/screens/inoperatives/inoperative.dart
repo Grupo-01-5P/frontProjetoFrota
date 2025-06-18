@@ -5,6 +5,21 @@ import 'viewInoperative.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:front_projeto_flutter/components/custom_drawer.dart';
 
+// Definindo constantes de estilo
+const kPrimaryColor = Color(0xFF148553);
+const kSecondaryColor = Color(0xFFFFAC26);
+const kBackgroundColor = Color(0xFFF5F5F5);
+const kCardShadow = BoxShadow(
+  color: Color(0x1A000000),
+  blurRadius: 10,
+  offset: Offset(0, 4),
+  spreadRadius: 0,
+);
+
+// Cores para os status
+const kStatusGreen = Color(0xFF28A745);
+const kStatusRed = Color(0xFFDC3545);
+
 class Inoperative extends StatefulWidget {
   const Inoperative({super.key});
 
@@ -75,6 +90,7 @@ class _InoperativeState extends State<Inoperative> {
       final token = await getValidToken();
       if (token == null) return;
 
+      print('\n=== BUSCANDO MANUTENÇÕES ===');
       print('URL: http://localhost:4040/inoperative?_page=$currentPage&_limit=10');
 
       final response = await http.get(
@@ -85,11 +101,26 @@ class _InoperativeState extends State<Inoperative> {
         },
       );
 
+      print('\n=== RESPOSTA DA LISTAGEM ===');
       print('Status code: ${response.statusCode}');
-      print('Resposta: ${response.body}');
-
+      print('Headers: ${response.headers}');
+      
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        print('\n=== DADOS RECEBIDOS ===');
+        print('Total de itens: ${data['meta']['totalItems']}');
+        print('Página atual: ${data['meta']['currentPage']}');
+        print('Total de páginas: ${data['meta']['totalPages']}');
+        print('\n=== MANUTENÇÕES RECEBIDAS ===');
+        for (var manutencao in data['data']) {
+          print('\nManutenção ID: ${manutencao['id']}');
+          print('Status: ${manutencao['status']}');
+          print('Veículo: ${manutencao['veiculo']['marca']} ${manutencao['veiculo']['modelo']} - Placa: ${manutencao['veiculo']['placa']}');
+          if (manutencao['oficina'] != null) {
+            print('Oficina: ${manutencao['oficina']['nome']} - ${manutencao['oficina']['cidade']}/${manutencao['oficina']['estado']}');
+          }
+        }
+
         setState(() {
           if (isLoadMore) {
             inoperantes.addAll(data['data']);
@@ -134,7 +165,8 @@ class _InoperativeState extends State<Inoperative> {
         );
       }
     } catch (e) {
-      print('Erro na requisição: $e');
+      print('\n=== ERRO NA LISTAGEM ===');
+      print('Erro: $e');
       setState(() {
         isLoading = false;
       });
@@ -249,18 +281,22 @@ class _InoperativeState extends State<Inoperative> {
     }
   }
 
-  Future<void> handleVehicleSelection(dynamic veiculo) async {
+  Future<void> handleVehicleSelection(dynamic manutencao) async {
     try {
-      print('Selecionando veículo: ${veiculo.toString()}');
+      print('\n=== SELEÇÃO DE MANUTENÇÃO ===');
+      print('Dados completos da manutenção:');
+      print(json.encode(manutencao));
+      
       setState(() {
         isLoading = true;
       });
 
-      if (veiculo == null || veiculo['id'] == null) {
-        print('Erro: Veículo ou ID do veículo é nulo');
+      if (manutencao == null || manutencao['id'] == null) {
+        print('\n=== ERRO: DADOS INVÁLIDOS ===');
+        print('Manutenção recebida: $manutencao');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Erro ao selecionar veículo'),
+            content: Text('Erro ao selecionar manutenção'),
             backgroundColor: Colors.red,
           ),
         );
@@ -270,72 +306,152 @@ class _InoperativeState extends State<Inoperative> {
       final token = await getValidToken();
       if (token == null) return;
 
-      final veiculoId = veiculo['id'] as int;
-      print('Verificando se veículo $veiculoId já está inoperante');
+      final manutencaoId = manutencao['id'] as int;
+      print('\n=== VERIFICANDO MANUTENÇÃO ===');
+      print('ID da Manutenção: $manutencaoId');
+      print('URL: http://localhost:4040/inoperative/check/maintenance/$manutencaoId');
       
-      // Primeiro, tenta buscar um inoperante existente
-      final existingInoperante = await getExistingInoperante(veiculoId);
-      
-      if (existingInoperante != null) {
-        print('Inoperante existente encontrado: ${existingInoperante['id']}');
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ViewInoperative(
-              inoperanteId: existingInoperante['id'] as int,
-            ),
-          ),
-        );
-        return;
-      }
-
-      print('Criando novo inoperante para veículo $veiculoId');
-      final response = await http.post(
-        Uri.parse('http://localhost:4040/inoperative/vehicle/$veiculoId'),
+      // Primeiro, verifica se já existe um inoperante para esta manutenção
+      final response = await http.get(
+        Uri.parse('http://localhost:4040/inoperative/check/maintenance/$manutencaoId'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
       );
 
-      print('Status code da criação: ${response.statusCode}');
-      print('Resposta da criação: ${response.body}');
+      print('\n=== RESPOSTA DA VERIFICAÇÃO ===');
+      print('Status code: ${response.statusCode}');
+      print('Headers: ${response.headers}');
+      print('Body: ${response.body}');
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final inoperanteId = data['data']['id'] as int;
-        print('Inoperante criado com ID: $inoperanteId');
         
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ViewInoperative(
-              inoperanteId: inoperanteId,
-            ),
-          ),
-        );
-      } else if (response.statusCode == 400) {
-        // Se já existe um inoperante ativo
-        final data = json.decode(response.body);
-        if (data['data']?['id'] != null) {
-          print('Inoperante já existe, navegando para ele: ${data['data']['id']}');
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ViewInoperative(
-                inoperanteId: data['data']['id'] as int,
-              ),
-            ),
+        print('\n=== DADOS DA VERIFICAÇÃO ===');
+        print('Existe inoperante: ${data['exists']}');
+        print('Elegível: ${data['isEligible']}');
+        print('Mensagem: ${data['message']}');
+        print('Dados: ${data['data']}');
+        
+        // Se existe um inoperante
+        if (data['exists'] == true && data['data'] != null) {
+          print('\n=== INOPERANTE ENCONTRADO ===');
+          print('ID do Inoperante: ${data['data']['id']}');
+          print('Fase Atual: ${data['data']['faseAtual']}');
+          
+          // Busca os detalhes do inoperante
+          final inoperanteId = data['data']['id'] as int;
+          final phaseResponse = await http.get(
+            Uri.parse('http://localhost:4040/inoperative/$inoperanteId/phase'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
           );
+
+          print('\n=== RESPOSTA DAS FASES ===');
+          print('Status code: ${phaseResponse.statusCode}');
+          print('Body: ${phaseResponse.body}');
+
+          if (phaseResponse.statusCode == 200) {
+            final phaseData = json.decode(phaseResponse.body);
+            // Navega para a visualização do inoperante com os dados das fases
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ViewInoperative(
+                  inoperanteId: inoperanteId,
+                  initialPhaseData: phaseData['data'],
+                ),
+              ),
+            );
+          } else {
+            throw Exception('Falha ao buscar fases do inoperante');
+          }
+          return;
+        }
+
+        // Se não tem inoperante mas a manutenção é elegível
+        if (data['isEligible'] == true) {
+          print('\n=== CRIANDO NOVO INOPERANTE ===');
+          print('URL: http://localhost:4040/inoperative/maintenance/$manutencaoId');
+          
+          final createResponse = await http.post(
+            Uri.parse('http://localhost:4040/inoperative/maintenance/$manutencaoId'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+          );
+
+          print('\n=== RESPOSTA DA CRIAÇÃO ===');
+          print('Status code: ${createResponse.statusCode}');
+          print('Headers: ${createResponse.headers}');
+          print('Body: ${createResponse.body}');
+
+          if (createResponse.statusCode == 201) {
+            final createData = json.decode(createResponse.body);
+            print('\n=== INOPERANTE CRIADO ===');
+            print('ID do novo inoperante: ${createData['data']['id']}');
+            print('Dados completos: ${json.encode(createData)}');
+            
+            // Busca as fases do novo inoperante
+            final newInoperanteId = createData['data']['id'] as int;
+            final newPhaseResponse = await http.get(
+              Uri.parse('http://localhost:4040/inoperative/$newInoperanteId/phase'),
+              headers: {
+                'Authorization': 'Bearer $token',
+                'Content-Type': 'application/json',
+              },
+            );
+
+            if (newPhaseResponse.statusCode == 200) {
+              final newPhaseData = json.decode(newPhaseResponse.body);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ViewInoperative(
+                    inoperanteId: newInoperanteId,
+                    initialPhaseData: newPhaseData['data'],
+                  ),
+                ),
+              );
+            } else {
+              throw Exception('Falha ao buscar fases do novo inoperante');
+            }
+          } else {
+            final errorData = json.decode(createResponse.body);
+            print('\n=== ERRO NA CRIAÇÃO ===');
+            print('Erro: ${errorData['message']}');
+            throw Exception(errorData['message'] ?? 'Falha ao processar manutenção');
+          }
         } else {
+          print('\n=== MANUTENÇÃO NÃO ELEGÍVEL ===');
+          print('Mensagem: ${data['message']}');
+          
+          // Verifica o status da manutenção para mostrar uma mensagem mais específica
+          final status = manutencao['status'] as String?;
+          String mensagem = data['message'] ?? 'Manutenção não elegível para criar inoperante';
+          
+          if (status == 'concluída') {
+            mensagem = 'Esta manutenção já foi concluída. Não é possível criar ou modificar inoperantes para manutenções concluídas.';
+          } else if (status == 'reprovada') {
+            mensagem = 'Esta manutenção foi reprovada. Não é possível criar inoperantes para manutenções reprovadas.';
+          } else if (status == 'pendente') {
+            mensagem = 'Esta manutenção ainda está pendente de aprovação. Somente manutenções aprovadas ou em andamento podem ter inoperantes.';
+          }
+          
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(data['message'] ?? 'Erro ao processar veículo'),
-              backgroundColor: Colors.red,
+              content: Text(mensagem),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 5),
             ),
           );
         }
       } else if (response.statusCode == 401) {
+        print('\n=== ERRO DE AUTENTICAÇÃO ===');
         await _secureStorage.delete(key: 'auth_token');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -343,15 +459,18 @@ class _InoperativeState extends State<Inoperative> {
             backgroundColor: Colors.red,
           ),
         );
-        // TODO: Redirecionar para tela de login
       } else {
-        throw Exception('Falha ao processar veículo');
+        print('\n=== ERRO NA VERIFICAÇÃO ===');
+        print('Status code: ${response.statusCode}');
+        print('Body: ${response.body}');
+        throw Exception('Falha ao verificar status da manutenção');
       }
     } catch (e) {
-      print('Erro ao selecionar veículo: $e');
+      print('\n=== ERRO GERAL ===');
+      print('Erro: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erro ao processar veículo: ${e.toString()}'),
+          content: Text('Erro ao processar manutenção: ${e.toString()}'),
           backgroundColor: Colors.red,
         ),
       );
@@ -362,47 +481,80 @@ class _InoperativeState extends State<Inoperative> {
     }
   }
 
+  // Função para determinar o texto de exibição do status
+  String getStatusText(String? status) {
+    if (status == null) return "INOPERANTE";
+    
+    switch (status.toLowerCase()) {
+      case 'aprovada':
+        return "INOPERANTE";
+      default:
+        return status.toUpperCase();
+    }
+  }
+
+  // Função para determinar a cor do status
+  Color getStatusColor(String? status) {
+    if (status == null) return kStatusRed;
+    
+    switch (status.toLowerCase()) {
+      case 'concluida':
+      case 'concluída':
+        return kStatusGreen;
+      case 'aprovada':
+      case 'inoperante':
+      default:
+        return kStatusRed;
+    }
+  }
+
+  // Função para determinar a cor de fundo do status
+  Color getStatusBackgroundColor(String? status) {
+    if (status == null) return kStatusRed.withOpacity(0.1);
+    
+    switch (status.toLowerCase()) {
+      case 'concluida':
+      case 'concluída':
+        return kStatusGreen.withOpacity(0.1);
+      case 'aprovada':
+      case 'inoperante':
+      default:
+        return kStatusRed.withOpacity(0.1);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Filtrar inoperantes baseado na busca
-    final filteredInoperantes =
-        searchQuery != null
-            ? inoperantes
-                .where(
-                  (inop) => inop['veiculo']['placa'].toString().contains(
-                    searchQuery!,
-                  ),
-                )
-                .toList()
-            : inoperantes;
+    final filteredInoperantes = searchQuery != null
+        ? inoperantes
+            .where(
+              (inop) => inop['veiculo']['placa'].toString().contains(searchQuery!),
+            )
+            .toList()
+        : inoperantes;
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: const Color.fromARGB(250, 250, 250, 250),
+      backgroundColor: kBackgroundColor,
       drawer: CustomDrawer(
-        headerColor: const Color(0xFF148553),
+        headerColor: kPrimaryColor,
         useCustomIcons: true,
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header com Menu e Título
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 6,
-                          offset: const Offset(2, 2),
-                        ),
-                      ],
+                      boxShadow: [kCardShadow],
                     ),
                     child: IconButton(
                       icon: Image.asset(
@@ -415,256 +567,326 @@ class _InoperativeState extends State<Inoperative> {
                       },
                     ),
                   ),
+                  const SizedBox(width: 20),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
               // Card de Busca
-              Card(
-                color: Colors.white,
-                elevation: 8,
-                shadowColor: Colors.black.withOpacity(0.2),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [kCardShadow],
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.only(left: 12),
-                            child: Text(
-                              "Buscar veículo",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          IconTheme(
-                            data: const IconThemeData(
-                              color: Colors.black,
-                              size: 28,
-                            ),
-                            child: Icon(Icons.sort_by_alpha),
-                          ),
-                        ],
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Buscar veículo",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2D2D2D),
                       ),
-                      const SizedBox(height: 20),
-                      TextField(
-                        onChanged: filterInoperantes,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: const Color(0xFFEEEEEE),
-                          hintText: "Digite a placa do veículo",
-                          border: OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      onChanged: filterInoperantes,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: const Color(0xFFF5F5F5),
+                        hintText: "Digite a placa do veículo",
+                        hintStyle: TextStyle(color: Colors.grey[400]),
+                        prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
               // Lista de Veículos
               Expanded(
-                child:
-                    isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : filteredInoperantes.isEmpty
-                        ? const Center(
-                          child: Text('Nenhum veículo inoperante encontrado'),
-                        )
+                child: isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(kPrimaryColor),
+                        ),
+                      )
+                    : filteredInoperantes.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.car_repair,
+                                  size: 64,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Nenhum veículo inoperante encontrado',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
                         : ListView.builder(
-                          itemCount: filteredInoperantes.length + (hasMoreItems ? 1 : 0),
-                          controller: _scrollController,
-                          itemBuilder: (context, index) {
-                            if (index == filteredInoperantes.length) {
-                              return const Padding(
-                                padding: EdgeInsets.all(16.0),
-                                child: Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            }
+                            itemCount: filteredInoperantes.length + (hasMoreItems ? 1 : 0),
+                            controller: _scrollController,
+                            itemBuilder: (context, index) {
+                              if (index == filteredInoperantes.length) {
+                                return const Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(kPrimaryColor),
+                                    ),
+                                  ),
+                                );
+                              }
 
-                            final inoperante = filteredInoperantes[index];
-                            final veiculo = inoperante['veiculo'];
-                            final oficina = inoperante['oficina'];
-                            final supervisor = inoperante['supervisor'];
+                              final inoperante = filteredInoperantes[index];
+                              final veiculo = inoperante['veiculo'];
 
-                            return InkWell(
-                              onTap: () async {
-                                print('Card clicado. Dados do veículo:');
-                                print(veiculo.toString());
-                                await handleVehicleSelection(veiculo);
-                              },
-                              child: Card(
-                                color: Colors.white,
-                                elevation: 8,
-                                shadowColor: Colors.black.withOpacity(0.2),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: InkWell(
+                                  onTap: () async {
+                                    await handleVehicleSelection(inoperante);
+                                  },
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [kCardShadow],
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(20),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            veiculo['placa'] ?? 'Sem placa',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w900,
-                                              fontSize: 20,
-                                            ),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 12,
+                                                  vertical: 6,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: kPrimaryColor.withOpacity(0.1),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                                child: Text(
+                                                  veiculo['placa'] ?? 'Sem placa',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 18,
+                                                    color: kPrimaryColor,
+                                                  ),
+                                                ),
+                                              ),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 12,
+                                                  vertical: 6,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: getStatusBackgroundColor(inoperante['status']),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                                child: Text(
+                                                  getStatusText(inoperante['status']),
+                                                  style: TextStyle(
+                                                    color: getStatusColor(inoperante['status']),
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
+                                          const SizedBox(height: 16),
                                           Text(
                                             "${veiculo['marca'] ?? ''} ${veiculo['modelo'] ?? ''} ${veiculo['anoModelo'] ?? ''}",
                                             style: const TextStyle(
                                               fontSize: 16,
+                                              fontWeight: FontWeight.w500,
+                                              color: Color(0xFF2D2D2D),
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 10),
-                                      Text(
-                                        veiculo['cor'] ?? 'Cor não informada',
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        veiculo['empresa'] ?? 'Empresa não informada',
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            veiculo['departamento'] ?? 'Departamento não informado',
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 6,
-                                              horizontal: 12,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFFFFAC26).withOpacity(0.7),
-                                              borderRadius: BorderRadius.circular(20),
-                                            ),
-                                            child: Text(
-                                              inoperante['status']?.toUpperCase() ?? "INOPERANTE",
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 14,
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.palette_outlined,
+                                                size: 16,
+                                                color: Colors.grey[600],
                                               ),
-                                            ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                veiculo['cor'] ?? 'Cor não informada',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.grey[600],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.business_outlined,
+                                                size: 16,
+                                                color: Colors.grey[600],
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                veiculo['empresa'] ?? 'Empresa não informada',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.grey[600],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.domain_outlined,
+                                                size: 16,
+                                                color: Colors.grey[600],
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                veiculo['departamento'] ?? 'Departamento não informado',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.grey[600],
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),
-                                      if (oficina != null) ...[
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          "Oficina: ${oficina['cidade'] ?? ''} - ${oficina['estado'] ?? ''}",
-                                          style: const TextStyle(fontSize: 14),
-                                        ),
-                                      ],
-                                      if (supervisor != null) ...[
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          "Supervisor: ${supervisor['nome'] ?? 'Não atribuído'} (${supervisor['email'] ?? 'Sem email'})",
-                                          style: const TextStyle(fontSize: 14),
-                                        ),
-                                      ],
-                                    ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
+                              );
+                            },
+                          ),
               ),
             ],
           ),
         ),
       ),
-      bottomNavigationBar: SafeArea(
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
         child: ClipRRect(
           borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(30),
-            topRight: Radius.circular(30),
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
           ),
-          child: Container(
-            height: 70,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.7),
-                  blurRadius: 20.0,
-                  spreadRadius: 5.0,
-                  offset: const Offset(0, -10),
-                ),
-              ],
-            ),
-            child: BottomNavigationBar(
-              currentIndex: 2,
-              onTap: (index) {
-                if (index == 0) {
-                  // Manutenções
-                } else if (index == 1) {
-                  // Orçamentos
-                }
-              },
-              selectedItemColor: Colors.black,
-              unselectedItemColor: Colors.black,
-              type: BottomNavigationBarType.fixed,
-              backgroundColor: Colors.white,
-              items: [
-                BottomNavigationBarItem(
-                  icon: SizedBox(
-                    width: 30,
-                    height: 30,
-                    child: Image.asset('lib/assets/images/iconManutencoes.png'),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: BottomNavigationBar(
+                currentIndex: 2,
+                elevation: 0,
+                backgroundColor: Colors.transparent,
+                selectedItemColor: kPrimaryColor,
+                unselectedItemColor: Colors.grey[400],
+                type: BottomNavigationBarType.fixed,
+                items: [
+                  BottomNavigationBarItem(
+                    icon: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Image.asset(
+                        'lib/assets/images/iconManutencoes.png',
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                    activeIcon: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Image.asset(
+                        'lib/assets/images/iconManutencoes.png',
+                        color: kPrimaryColor,
+                      ),
+                    ),
+                    label: 'Manutenções',
                   ),
-                  label: 'Manutenções',
-                ),
-                BottomNavigationBarItem(
-                  icon: SizedBox(
-                    width: 30,
-                    height: 30,
-                    child: Image.asset('lib/assets/images/iconTerceirize.png'),
+                  BottomNavigationBarItem(
+                    icon: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Image.asset(
+                        'lib/assets/images/iconTerceirize.png',
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                    activeIcon: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Image.asset(
+                        'lib/assets/images/iconTerceirize.png',
+                        color: kPrimaryColor,
+                      ),
+                    ),
+                    label: 'Orçamentos',
                   ),
-                  label: 'Orçamentos',
-                ),
-                BottomNavigationBarItem(
-                  icon: SizedBox(
-                    width: 30,
-                    height: 30,
-                    child: Image.asset('lib/assets/images/iconInoperantes.png'),
+                  BottomNavigationBarItem(
+                    icon: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Image.asset(
+                        'lib/assets/images/iconInoperantes.png',
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                    activeIcon: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Image.asset(
+                        'lib/assets/images/iconInoperantes.png',
+                        color: kPrimaryColor,
+                      ),
+                    ),
+                    label: 'Inoperantes',
                   ),
-                  label: 'Inoperantes',
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
