@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'viewInoperative.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:front_projeto_flutter/components/custom_drawer.dart';
+import 'package:front_projeto_flutter/components/custom_bottom_navigation.dart';
 
 // Definindo constantes de estilo
 const kPrimaryColor = Color(0xFF148553);
@@ -36,6 +37,7 @@ class _InoperativeState extends State<Inoperative> {
   int currentPage = 1;
   bool hasMoreItems = true;
   final ScrollController _scrollController = ScrollController();
+  String selectedFilter = 'todos';
 
   @override
   void initState() {
@@ -525,13 +527,19 @@ class _InoperativeState extends State<Inoperative> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredInoperantes = searchQuery != null
-        ? inoperantes
-            .where(
-              (inop) => inop['veiculo']['placa'].toString().contains(searchQuery!),
-            )
-            .toList()
-        : inoperantes;
+    final filteredInoperantes = inoperantes.where((inop) {
+      bool matchesSearch = searchQuery == null || 
+          inop['veiculo']['placa'].toString().contains(searchQuery!);
+      
+      bool matchesFilter = selectedFilter == 'todos' ||
+          (selectedFilter == 'inoperantes' && 
+              (inop['status'] == null || inop['status'].toLowerCase() == 'aprovada')) ||
+          (selectedFilter == 'concluidos' && 
+              (inop['status']?.toLowerCase() == 'concluida' || 
+               inop['status']?.toLowerCase() == 'concluída'));
+      
+      return matchesSearch && matchesFilter;
+    }).toList();
 
     return Scaffold(
       key: _scaffoldKey,
@@ -609,6 +617,46 @@ class _InoperativeState extends State<Inoperative> {
                           vertical: 16,
                         ),
                       ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Botões de Filtro
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    FilterButton(
+                      text: "Todos",
+                      isSelected: selectedFilter == 'todos',
+                      onTap: () {
+                        setState(() {
+                          selectedFilter = 'todos';
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 12),
+                    FilterButton(
+                      text: "Inoperantes",
+                      isSelected: selectedFilter == 'inoperantes',
+                      onTap: () {
+                        setState(() {
+                          selectedFilter = 'inoperantes';
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 12),
+                    FilterButton(
+                      text: "Concluídos",
+                      isSelected: selectedFilter == 'concluidos',
+                      onTap: () {
+                        setState(() {
+                          selectedFilter = 'concluidos';
+                        });
+                      },
                     ),
                   ],
                 ),
@@ -797,97 +845,62 @@ class _InoperativeState extends State<Inoperative> {
           ),
         ),
       ),
-      bottomNavigationBar: Container(
+      bottomNavigationBar: CustomBottomNavigation(
+        currentIndex: 2,
+        onTap: (index) {
+          if (index == 0) {
+            // Manutenções
+          } else if (index == 1) {
+            // Orçamentos
+          }
+        },
+      ),
+    );
+  }
+}
+
+// Widget do botão de filtro
+class FilterButton extends StatelessWidget {
+  final String text;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const FilterButton({
+    Key? key,
+    required this.text,
+    required this.isSelected,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+          color: isSelected ? kPrimaryColor : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: kPrimaryColor,
+            width: 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: kPrimaryColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : [],
         ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: BottomNavigationBar(
-                currentIndex: 2,
-                elevation: 0,
-                backgroundColor: Colors.transparent,
-                selectedItemColor: kPrimaryColor,
-                unselectedItemColor: Colors.grey[400],
-                type: BottomNavigationBarType.fixed,
-                items: [
-                  BottomNavigationBarItem(
-                    icon: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: Image.asset(
-                        'lib/assets/images/iconManutencoes.png',
-                        color: Colors.grey[400],
-                      ),
-                    ),
-                    activeIcon: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: Image.asset(
-                        'lib/assets/images/iconManutencoes.png',
-                        color: kPrimaryColor,
-                      ),
-                    ),
-                    label: 'Manutenções',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: Image.asset(
-                        'lib/assets/images/iconTerceirize.png',
-                        color: Colors.grey[400],
-                      ),
-                    ),
-                    activeIcon: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: Image.asset(
-                        'lib/assets/images/iconTerceirize.png',
-                        color: kPrimaryColor,
-                      ),
-                    ),
-                    label: 'Orçamentos',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: Image.asset(
-                        'lib/assets/images/iconInoperantes.png',
-                        color: Colors.grey[400],
-                      ),
-                    ),
-                    activeIcon: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: Image.asset(
-                        'lib/assets/images/iconInoperantes.png',
-                        color: kPrimaryColor,
-                      ),
-                    ),
-                    label: 'Inoperantes',
-                  ),
-                ],
-              ),
-            ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: isSelected ? Colors.white : kPrimaryColor,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
           ),
         ),
       ),

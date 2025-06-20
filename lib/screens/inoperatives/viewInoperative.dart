@@ -1,8 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:front_projeto_flutter/components/custom_drawer.dart';
+import 'package:front_projeto_flutter/components/custom_bottom_navigation.dart';
+import 'package:front_projeto_flutter/screens/maintenences/manutencoes_geral.dart';
+import 'package:front_projeto_flutter/screens/budgets/budgets_page.dart';
+import 'package:front_projeto_flutter/screens/home_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+// Definindo constantes de estilo
+const kPrimaryColor = Color(0xFF148553);
+const kSecondaryColor = Color(0xFFFFAC26);
+const kBackgroundColor = Color(0xFFF5F5F5);
+const kCardShadow = BoxShadow(
+  color: Color(0x1A000000),
+  blurRadius: 10,
+  offset: Offset(0, 4),
+  spreadRadius: 0,
+);
+
+// Cores para os status
+const kStatusGreen = Color(0xFF28A745);
+const kStatusRed = Color(0xFFDC3545);
+const kStatusAmber = Color(0xFFFFC107);
+const kStatusGrey = Color(0xFF6C757D);
 
 class ViewInoperative extends StatefulWidget {
   final int inoperanteId;
@@ -58,10 +79,10 @@ class _ViewInoperativeState extends State<ViewInoperative> {
   ];
 
   final List<String> addresses = [
-    "Clique em iniciar para registrar o percurso até a mecânica",
-    "Inicie e conclua esta etapa quando o veículo for deixado na mecânica",
-    "Inicie e conclua esta etapa quando a manutenção do veículo for finalizada",
-    "Clique em iniciar para registrar o percurso até o ponto de origem",
+    "Clique em concluir para registrar o percurso até a mecânica",
+    "Conclua esta etapa quando o veículo for deixado na mecânica",
+    "Conclua esta etapa quando a manutenção do veículo for finalizada",
+    "Clique em concluir para registrar que o veículo está pronto para operação",
     "", // Descrição vazia para FASE5
   ];
 
@@ -465,9 +486,9 @@ class _ViewInoperativeState extends State<ViewInoperative> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: const Color.fromARGB(250, 250, 250, 250),
+      backgroundColor: kBackgroundColor,
       drawer: CustomDrawer(
-        headerColor: const Color(0xFF148553),
+        headerColor: kPrimaryColor,
         useCustomIcons: true,
       ),
       body: SafeArea(
@@ -521,67 +542,38 @@ class _ViewInoperativeState extends State<ViewInoperative> {
           ),
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(30),
-            topRight: Radius.circular(30),
-          ),
-          child: Container(
-            height: 70,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.7),
-                  blurRadius: 20.0,
-                  spreadRadius: 5.0,
-                  offset: const Offset(0, -10),
+      bottomNavigationBar: CustomBottomNavigation(
+        currentIndex: 2,
+        isSupervisor: userFuncao == 'supervisor',
+        onTap: (index) {
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ManutencoesGeralScreen(),
+              ),
+            );
+          } else if (index == 1) {
+            if (userFuncao == 'supervisor') {
+              // Para supervisor, navega para HomePage
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => HomePage(),
                 ),
-              ],
-            ),
-            child: BottomNavigationBar(
-              currentIndex: 2,
-              onTap: (index) {
-                if (index == 0) {
-                  // Manutenções
-                } else if (index == 1) {
-                  // Orçamentos
-                }
-              },
-              selectedItemColor: Colors.black,
-              unselectedItemColor: Colors.black,
-              type: BottomNavigationBarType.fixed,
-              backgroundColor: Colors.white,
-              items: [
-                BottomNavigationBarItem(
-                  icon: SizedBox(
-                    width: 30,
-                    height: 30,
-                    child: Image.asset('lib/assets/images/iconManutencoes.png'),
-                  ),
-                  label: 'Manutenções',
+              );
+            } else {
+              // Para outros perfis, navega para BudgetsPage
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BudgetsPage(),
                 ),
-                BottomNavigationBarItem(
-                  icon: SizedBox(
-                    width: 30,
-                    height: 30,
-                    child: Image.asset('lib/assets/images/iconTerceirize.png'),
-                  ),
-                  label: 'Orçamentos',
-                ),
-                BottomNavigationBarItem(
-                  icon: SizedBox(
-                    width: 30,
-                    height: 30,
-                    child: Image.asset('lib/assets/images/iconInoperantes.png'),
-                  ),
-                  label: 'Inoperantes',
-                ),
-              ],
-            ),
-          ),
-        ),
+              );
+            }
+          }
+          // Não precisa de navegação para index 2 pois já estamos na tela de Inoperantes
+        },
       ),
     );
   }
@@ -592,67 +584,78 @@ class _ViewInoperativeState extends State<ViewInoperative> {
 
     // Inicialização com valores padrão
     String buttonText = "Aguardando";
-    Color buttonColor = Colors.grey;
+    Color buttonColor = kStatusGrey;
     bool buttonEnabled = false;
 
     // Verifica se é a fase atual
     bool isFaseAtual = faseAtual != null && fasesEnum[faseAtual] == index;
     // Verifica se é uma fase anterior à atual
     bool isFaseAnterior = faseAtual != null && fasesEnum[faseAtual]! > index;
+    // Verifica se a fase anterior está concluída
+    bool faseAnteriorConcluida = index == 0 || 
+        (index > 0 && estadoFases['FASE${index}'] == 'concluida');
 
     // Define o estado do botão baseado na fase atual e se foi iniciada
     if (isFaseAnterior) {
       buttonText = "Concluído";
-      buttonColor = Colors.green;
+      buttonColor = kStatusGreen;
       buttonEnabled = false;
-    } else if (isFaseAtual) {
+    } else if (isFaseAtual && (index == 0 || estadoFases['FASE${index}'] == 'concluida')) {
       // Comportamento específico para cada fase
       switch (index) {
         case 0: // Fase 1 - comportamento original
           if (estadoFases[faseAtual!] == 'nao_iniciada') {
             buttonText = "Iniciar";
-            buttonColor = Colors.blue;
+            buttonColor = kPrimaryColor;
             buttonEnabled = true;
           } else {
             buttonText = "Concluir";
-            buttonColor = Colors.amber;
+            buttonColor = kStatusAmber;
             buttonEnabled = true;
           }
           break;
         
         case 1: // Fase 2 - começa com Concluir
           buttonText = "Concluir";
-          buttonColor = Colors.amber;
+          buttonColor = kStatusAmber;
           buttonEnabled = true;
           break;
         
         case 2: // Fase 3 - Aguardando e bloqueado para supervisor
           buttonText = "Aguardando";
-          buttonColor = Colors.grey;
-          buttonEnabled = false; // Sempre desabilitado para supervisor
+          buttonColor = kStatusGrey;
+          buttonEnabled = false;
           break;
         
         case 3: // Fase 4 - mesmo modelo da fase 1
           if (estadoFases[faseAtual!] == 'nao_iniciada') {
             buttonText = "Iniciar";
-            buttonColor = Colors.blue;
+            buttonColor = kPrimaryColor;
             buttonEnabled = true;
           } else {
             buttonText = "Concluir";
-            buttonColor = Colors.amber;
+            buttonColor = kStatusAmber;
             buttonEnabled = true;
           }
           break;
       }
     }
 
-    bool isActive = index == 0 || (faseAtual != null && fasesEnum[faseAtual]! >= index - 1);
+    bool isActive = faseAnteriorConcluida;
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-      elevation: 4,
-      color: isActive ? Colors.white : Colors.grey[300],
+    return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: isActive ? Colors.white : Colors.grey[100],
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -663,21 +666,22 @@ class _ViewInoperativeState extends State<ViewInoperative> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: isActive ? Colors.black : Colors.black54,
+                color: isActive ? Colors.black87 : Colors.black45,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Text(
               addresses[index],
               style: TextStyle(
                 fontSize: 16,
-                color: isActive ? Colors.black : Colors.black54,
+                color: isActive ? Colors.black87 : Colors.black45,
               ),
             ),
-            const SizedBox(height: 12),
-            Center(
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
               child: ElevatedButton(
-                onPressed: (buttonEnabled && userFuncao == 'supervisor')
+                onPressed: (buttonEnabled && userFuncao == 'supervisor' && isActive)
                     ? () {
                         if (buttonText == "Iniciar") {
                           confirmarMudancaFase(faseAtual!, isInicio: true);
@@ -690,17 +694,24 @@ class _ViewInoperativeState extends State<ViewInoperative> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: buttonColor,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: buttonColor,
-                  disabledForegroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
+                  disabledBackgroundColor: buttonColor.withOpacity(0.1),
+                  disabledForegroundColor: buttonColor,
+                  elevation: 0,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
                     vertical: 12,
+                    horizontal: 24,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Text(buttonText),
+                child: Text(
+                  buttonText,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ],
@@ -719,54 +730,60 @@ class _ViewInoperativeState extends State<ViewInoperative> {
     bool isFaseAnterior = faseAtual != null && fasesEnum[faseAtual]! > index;
     // Verifica se o processo está concluído (FASE5)
     bool isProcessoConcluido = faseAtual == 'FASE5';
+    // Verifica se a fase anterior está concluída
+    bool faseAnteriorConcluida = index == 0 || 
+        (index > 0 && (estadoFases['FASE${index}'] == 'concluida' || 
+                      (index > 1 && estadoFases['FASE${index-1}'] == 'concluida')));
 
     // Inicialização com valores padrão
     String buttonText = "Aguardando";
-    Color buttonColor = Colors.grey;
+    Color buttonColor = kStatusGrey;
     bool buttonEnabled = false;
 
     // Se o processo estiver concluído, todas as fases devem mostrar como concluídas
     if (isProcessoConcluido) {
       buttonText = "Concluído";
-      buttonColor = Colors.green;
+      buttonColor = kStatusGreen;
     } else if (isFaseAnterior) {
       buttonText = "Concluído";
-      buttonColor = Colors.green;
-    } else if (isFaseAtual) {
+      buttonColor = kStatusGreen;
+    } else if (isFaseAtual && (index == 0 || 
+        (index > 0 && (estadoFases['FASE${index}'] == 'concluida' || 
+                      (index > 1 && estadoFases['FASE${index-1}'] == 'concluida'))))) {
       // Comportamento específico para cada fase
       switch (index) {
         case 0: // Fase 1
         case 3: // Fase 4 (mesmo comportamento da Fase 1)
           if (estadoFases[faseAtual!] == 'nao_iniciada') {
             buttonText = "Iniciar";
-            buttonColor = Colors.grey;
+            buttonColor = kPrimaryColor;
           } else if (estadoFases[faseAtual!] == 'iniciada') {
             buttonText = "Finalizar";
-            buttonColor = Colors.amber;
+            buttonColor = kStatusAmber;
           } else if (estadoFases[faseAtual!] == 'concluida') {
             buttonText = "Concluído";
-            buttonColor = Colors.green;
+            buttonColor = kStatusGreen;
           }
           break;
         
         case 1: // Fase 2 - começa com Em Andamento
           if (estadoFases[faseAtual!] == 'concluida') {
             buttonText = "Concluído";
-            buttonColor = Colors.green;
+            buttonColor = kStatusGreen;
           } else {
             buttonText = "Em Andamento";
-            buttonColor = Colors.amber;
+            buttonColor = kStatusAmber;
           }
           break;
         
         case 2: // Fase 3 - Analista pode concluir
           if (estadoFases[faseAtual!] == 'concluida') {
             buttonText = "Concluído";
-            buttonColor = Colors.green;
+            buttonColor = kStatusGreen;
           } else {
             buttonText = "Concluir";
-            buttonColor = Colors.amber;
-            buttonEnabled = true; // Apenas o analista pode concluir esta fase
+            buttonColor = kStatusAmber;
+            buttonEnabled = true;
           }
           break;
       }
@@ -776,65 +793,65 @@ class _ViewInoperativeState extends State<ViewInoperative> {
     String descricaoAtual = descriptionsAnalista[index];
     if (isProcessoConcluido) {
       descricaoAtual = "Fase concluída com sucesso.";
-    } else if (isFaseAtual) {
+    } else if (isFaseAtual && faseAnteriorConcluida) {
       switch (estadoFases[faseAtual!]) {
-        case 'nao_iniciada':
+        case 'aprovada':
           descricaoAtual = "Aguardando início da fase.";
-          break;
-        case 'iniciada':
-          descricaoAtual = descriptionsAnalista[index];
           break;
         case 'concluida':
           descricaoAtual = "Fase concluída com sucesso.";
           break;
         default:
-          descricaoAtual = descriptionsAnalista[index];
+          descricaoAtual = "Status desconhecido.";
       }
     } else if (isFaseAnterior) {
       descricaoAtual = "Fase concluída com sucesso.";
+    } else if (!faseAnteriorConcluida) {
+      descricaoAtual = "Aguardando conclusão da fase anterior.";
     }
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-      elevation: 4,
-      color: Colors.white,
+    bool isActive = faseAnteriorConcluida;
+
+    return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: isActive ? Colors.white : Colors.grey[100],
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Stack(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  titlesAnalista[index],
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isFaseAtual ? Colors.black : Colors.black54,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Responsável: $userNome",
-                  style: const TextStyle(fontSize: 16, color: Colors.black87),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  descricaoAtual,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: isFaseAtual ? Colors.black : Colors.black54,
-                  ),
-                ),
-                const SizedBox(height: 48),
-              ],
+            Text(
+              titlesAnalista[index],
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: isActive ? Colors.black87 : Colors.black45,
+              ),
             ),
-            Positioned(
-              bottom: 0,
-              right: 0,
+            const SizedBox(height: 16),
+            Text(
+              "Responsável: $userNome",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: isActive ? Colors.black87 : Colors.black45,
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
               child: ElevatedButton(
-                onPressed: buttonEnabled && index == 2 && isFaseAtual
+                onPressed: buttonEnabled && index == 2 && isFaseAtual && isActive
                     ? () {
                         String proximaFase = 'FASE${index + 2}';
                         confirmarMudancaFase(proximaFase);
@@ -843,17 +860,24 @@ class _ViewInoperativeState extends State<ViewInoperative> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: buttonColor,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: buttonColor,  // Adicionado para manter a cor mesmo quando desabilitado
-                  disabledForegroundColor: Colors.white, // Adicionado para manter a cor do texto mesmo quando desabilitado
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
+                  disabledBackgroundColor: buttonColor.withOpacity(0.1),
+                  disabledForegroundColor: buttonColor,
+                  elevation: 0,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
                     vertical: 12,
+                    horizontal: 24,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Text(buttonText),
+                child: Text(
+                  buttonText,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ],
