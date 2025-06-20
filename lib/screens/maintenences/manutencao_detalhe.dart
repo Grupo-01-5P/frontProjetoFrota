@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:front_projeto_flutter/screens/inoperatives/viewInoperative.dart';
 
 class ManutencaoDetailScreen extends StatefulWidget {
   final dynamic manutencao;
@@ -1269,6 +1270,48 @@ void _mostrarDialogoAprovacao() {
                       ],
                     ),
                   ),
+                // Após a seção de localização e antes dos botões de ação
+                const SizedBox(height: 16),
+                
+                // Botão Ver Etapas (apenas se status não for pendente)
+                if (widget.manutencao['status']?.toLowerCase() != 'pendente')
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Container(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.timeline, color: Colors.white),
+                        label: const Text(
+                          'Ver etapas da manutenção',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0C7E3D),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ViewInoperative(
+                                inoperanteId: widget.manutencao['id'],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                
+                const SizedBox(height: 16),
+                
                 // Botões de ação (apenas mostrar se o status for pendente)
                 (widget.manutencao['status']?.toLowerCase() == 'pendente')
                     ? Padding(

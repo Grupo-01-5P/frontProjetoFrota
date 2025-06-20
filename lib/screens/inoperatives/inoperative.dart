@@ -93,10 +93,10 @@ class _InoperativeState extends State<Inoperative> {
       if (token == null) return;
 
       print('\n=== BUSCANDO MANUTENÇÕES ===');
-      print('URL: http://localhost:4040/inoperative?_page=$currentPage&_limit=10');
+      print('URL: http://localhost:4040/inoperative?_page=$currentPage&_limit=10&_sort=id&_order=desc');
 
       final response = await http.get(
-        Uri.parse('http://localhost:4040/inoperative?_page=$currentPage&_limit=10'),
+        Uri.parse('http://localhost:4040/inoperative?_page=$currentPage&_limit=10&_sort=id&_order=desc'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
