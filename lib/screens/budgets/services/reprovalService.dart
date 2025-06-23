@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class BudgetReprovalService {
-  final String _baseUrl = 'http://localhost:4040/orcamento'; // AJUSTE ESTA URL
+  final String _baseUrl = 'http://localhost:4040/api/budgets'; // AJUSTE ESTA URL
 
   Future<void> reproveBudget(int budgetId) async {
     final _secureStorage = const FlutterSecureStorage();
@@ -13,15 +13,12 @@ class BudgetReprovalService {
     print("Reprovando orçamento (BudgetReprovalService) em: $reproveUrl");
 
     try {
-      final response = await http.put(
+      final response = await http.delete(
         Uri.parse(reproveUrl),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode(<String, String>{
-          'status': 'reprovado', // Conforme especificado, apenas o status muda
-        }),
       );
 
       if (response.statusCode == 200 || response.statusCode == 204) { // 204 No Content também é sucesso

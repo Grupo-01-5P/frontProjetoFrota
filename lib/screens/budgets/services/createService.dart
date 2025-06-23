@@ -6,7 +6,7 @@ class BudgetCreateService {
   // URL base para a API de oficinas e manutenções
   final String _baseUrl = 'http://localhost:4040/api';
   // URL para a criação de orçamentos
-  final String _budgetUrl = 'http://localhost:4040/orcamento';
+  final String _budgetUrl = 'http://localhost:4040/api/budgets';
 
   /// Busca a lista de manutenções disponíveis.
   Future<List<dynamic>> fetchMaintenances() async {
@@ -14,7 +14,7 @@ class BudgetCreateService {
       final token = await _secureStorage.read(key: 'auth_token');
     try {
       final response = await http.get(Uri.parse(
-        '$_baseUrl/maintenance'),
+        '$_baseUrl/maintenance?status=aprovada'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',

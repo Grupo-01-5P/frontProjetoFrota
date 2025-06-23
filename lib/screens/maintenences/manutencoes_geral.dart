@@ -43,10 +43,6 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
         return;
       }
 
-      // Construir URL com o filtro apropriado
-      // Nota: Ajustar para seu ambiente - usar 10.0.2.2 para emulador Android
-      // Se seu backend não suporta filtragem por status diretamente, você precisará
-      // implementar a filtragem do lado do cliente
       final url = Uri.parse('http://localhost:4040/api/maintenance/?status=$_filtroAtivo');
       
       final response = await http.get(
@@ -98,9 +94,9 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
   // Função para obter cor baseada no status
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'localhost':
+      case 'aprovada':
         return const Color(0xFF0C7E3D); // Verde para aprovada/em andamento
-      case 'Reprovada':
+      case 'reprovada':
         return Colors.red; // Vermelho para Reprovada
       case 'concluída':
         return Colors.blue; // Azul para concluída
@@ -109,12 +105,52 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
     }
   }
 
+  // Função para obter cor da fase
+  Color _getFaseColor(String? tipoFase) {
+    if (tipoFase == null) return Colors.grey;
+    
+    switch (tipoFase) {
+      case 'INICIAR_VIAGEM':
+        return Colors.orange;
+      case 'DEIXAR_VEICULO':
+        return Colors.blue;
+      case 'SERVICO_FINALIZADO':
+        return Colors.lightGreen;
+      case 'RETORNO_VEICULO':
+        return Colors.deepOrange;
+      case 'VEICULO_ENTREGUE':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  // Função para obter ícone da fase
+  IconData _getFaseIcon(String? tipoFase) {
+    if (tipoFase == null) return Icons.help_outline;
+    
+    switch (tipoFase) {
+      case 'INICIAR_VIAGEM':
+        return Icons.directions_car;
+      case 'DEIXAR_VEICULO':
+        return Icons.garage;
+      case 'SERVICO_FINALIZADO':
+        return Icons.build_circle;
+      case 'RETORNO_VEICULO':
+        return Icons.keyboard_return;
+      case 'VEICULO_ENTREGUE':
+        return Icons.check_circle;
+      default:
+        return Icons.help_outline;
+    }
+  }
+
   // Função para exibir o texto de status correto
   String _getStatusText(String status) {
     switch (status.toLowerCase()) {
       case 'aprovada':
         return 'Em Andamento';
-      case 'Reprovada':
+      case 'reprovada':
         return 'Reprovada';
       case 'concluída':
         return 'Concluída';
@@ -129,6 +165,7 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
       appBar: AppBar(
         title: const Text('Manutenções'),
         backgroundColor: const Color(0xFF0C7E3D),
+        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -210,14 +247,14 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
                   child: GestureDetector(
                     onTap: () {
                       setState(() {
-                        _filtroAtivo = 'Reprovada';
+                        _filtroAtivo = 'reprovada';
                       });
                       _fetchManutencoes();
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: _filtroAtivo == 'Reprovada'
+                        color: _filtroAtivo == 'reprovada'
                             ? const Color(0xFF0C7E3D)
                             : Colors.grey[200],
                         borderRadius: BorderRadius.circular(20),
@@ -226,7 +263,7 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
                         child: Text(
                           'Reprovadas',
                           style: TextStyle(
-                            color: _filtroAtivo == 'Reprovada'
+                            color: _filtroAtivo == 'reprovada'
                                 ? Colors.white
                                 : Colors.grey,
                             fontWeight: FontWeight.bold,
@@ -275,7 +312,10 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
                                 backgroundColor: const Color(0xFF0C7E3D),
                               ),
                               onPressed: _fetchManutencoes,
-                              child: const Text('Tentar novamente'),
+                              child: const Text(
+                                'Tentar novamente',
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ),
                           ],
                         ),
@@ -316,6 +356,7 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
                                 final manutencao = _manutencoes[index];
                                 final veiculo = manutencao['veiculo'];
                                 final status = manutencao['status'] ?? 'Desconhecido';
+                                final faseAtual = manutencao['faseAtual'];
                                 
                                 return Card(
                                   margin: const EdgeInsets.only(bottom: 16),
@@ -325,7 +366,6 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
                                   ),
                                   child: InkWell(
                                     onTap: () async {
-                                      // Navegar para detalhes da manutenção
                                       final result = await Navigator.push(
                                         context,
                                         MaterialPageRoute(
@@ -336,7 +376,6 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
                                         ),
                                       );
                                       
-                                      // Recarregar a lista se houver alterações
                                       if (result == true) {
                                         _fetchManutencoes();
                                       }
@@ -376,6 +415,72 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
                                               ),
                                             ],
                                           ),
+                                          
+                                          // NOVA SEÇÃO: Mostrar fase atual
+                                          if (faseAtual != null) ...[
+                                            const SizedBox(height: 8),
+                                            Container(
+                                              padding: const EdgeInsets.all(8),
+                                              decoration: BoxDecoration(
+                                                color: _getFaseColor(faseAtual['tipoFase']).withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(8),
+                                                border: Border.all(
+                                                  color: _getFaseColor(faseAtual['tipoFase']).withOpacity(0.3),
+                                                ),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  Icon(
+                                                    _getFaseIcon(faseAtual['tipoFase']),
+                                                    color: _getFaseColor(faseAtual['tipoFase']),
+                                                    size: 20,
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          'Fase Atual: ${faseAtual['descricaoFase'] ?? faseAtual['tipoFase']}',
+                                                          style: TextStyle(
+                                                            fontWeight: FontWeight.w500,
+                                                            color: _getFaseColor(faseAtual['tipoFase']),
+                                                            fontSize: 13,
+                                                          ),
+                                                        ),
+                                                        if (faseAtual['emAndamento'] == true)
+                                                          Text(
+                                                            'Em andamento desde ${_formatDate(faseAtual['dataInicio'])}',
+                                                            style: const TextStyle(
+                                                              fontSize: 11,
+                                                              color: Colors.grey,
+                                                            ),
+                                                          ),
+                                                        if (faseAtual['responsavel'] != null)
+                                                          Text(
+                                                            'Responsável: ${faseAtual['responsavel']['nome']}',
+                                                            style: const TextStyle(
+                                                              fontSize: 11,
+                                                              color: Colors.grey,
+                                                            ),
+                                                          ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  if (faseAtual['emAndamento'] == true)
+                                                    Container(
+                                                      width: 8,
+                                                      height: 8,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.green,
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+
                                           const SizedBox(height: 12),
                                           Row(
                                             children: [
@@ -400,33 +505,13 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
                                           const SizedBox(height: 4),
                                           Row(
                                             children: [
-                                              const Icon(Icons.location_on, size: 16, color: Colors.grey),
-                                              const SizedBox(width: 4),
-                                              Text('Localização: ${manutencao['localizacao'] ?? 'Não especificada'}'),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Row(
-                                            children: [
                                               const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
                                               const SizedBox(width: 4),
                                               Text('Data: ${_formatDate(manutencao['dataSolicitacao'])}'),
                                             ],
                                           ),
-                                          Row(
-                                            children: [
-                                              const Icon(
-                                                Icons.calendar_today,
-                                                size: 16,
-                                                color: Colors.grey,
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                'Data para levar: ${_formatDate(manutencao['dataEnviarMecanica']) ?? 'Não informado'} - ${DateFormat('HH:mm').format(DateTime.parse(manutencao['dataSolicitacao']))}',
-                                              ),
-                                            ],
-                                          ),
-                                          if (status.toLowerCase() == 'Reprovada' && manutencao['motivoReprovacao'] != null)
+                                          
+                                          if (status.toLowerCase() == 'reprovada' && manutencao['motivoReprovacao'] != null)
                                             Padding(
                                               padding: const EdgeInsets.only(top: 8),
                                               child: Container(
@@ -482,7 +567,10 @@ class _ManutencoesGeralScreenState extends State<ManutencoesGeralScreen> {
                                                   _fetchManutencoes();
                                                 }
                                               },
-                                              child: const Text('Ver detalhes', style: TextStyle(color: Colors.white),),
+                                              child: const Text(
+                                                'Ver detalhes',
+                                                style: TextStyle(color: Colors.white),
+                                              ),
                                             ),
                                           ),
                                         ],

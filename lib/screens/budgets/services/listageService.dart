@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class BudgetService {
-  final String _baseUrl = 'http://localhost:4040/orcamento'; 
+  final String _baseUrl = 'http://localhost:4040/api/budgets'; 
   Future<List<Map<String, dynamic>>> fetchBudgets() async {
     final _secureStorage = const FlutterSecureStorage();
     final token = await _secureStorage.read(key: 'auth_token');

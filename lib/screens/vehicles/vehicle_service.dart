@@ -16,6 +16,41 @@ class VehicleService {
     };
   }
 
+   Future<Map<String, dynamic>> getVehiclesWithStatus(String statusFilter) async {
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      
+      if (token == null) {
+        throw Exception('Token de autenticação não encontrado');
+      }
+
+      // Construir URL com filtro se necessário
+      String url = '$baseUrl/veiculos';
+      if (statusFilter != 'todos') {
+        url += '?status=$statusFilter';
+      }
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data;
+      } else if (response.statusCode == 401) {
+        throw Exception('Sessão expirada. Por favor, faça login novamente.');
+      } else {
+        throw Exception('Erro ao carregar veículos: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Erro de conexão: ${e.toString()}');
+    }
+  }
+
   // Obter lista de veículos
   Future<List<dynamic>> getVehicles() async {
     try {

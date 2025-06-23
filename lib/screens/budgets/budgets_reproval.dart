@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:front_projeto_flutter/screens/budgets/budgets_listage.dart';
 import 'package:front_projeto_flutter/screens/budgets/budgets_page.dart';
 import 'package:front_projeto_flutter/screens/budgets/budgets_exibition.dart';
 import 'package:front_projeto_flutter/screens/budgets/services/reprovalService.dart';
@@ -43,7 +44,7 @@ class _BudgetsReprovalState extends State<BudgetsReproval> {
       // Navegar para BudgetsExibition após sucesso
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => BudgetsExibition(budgetId: widget.budgetId),
+          builder: (context) => BudgetsListage(),
         ),
       );
     } catch (e) {

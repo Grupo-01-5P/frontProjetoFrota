@@ -308,23 +308,6 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
 
-                    // Link "Esqueci minha senha"
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          // Navegue para a tela de recuperação de senha
-                          Navigator.pushNamed(context, '/forgot_password');
-                        },
-                        child: const Text(
-                          'Esqueci minha senha',
-                          style: TextStyle(
-                            color: Color(0xFF148553),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
 
                     const SizedBox(height: 30),
 

@@ -46,6 +46,7 @@ dependencies:
   jwt_decoder: ^2.0.1
   location_geocoder: ^1.0.5
   mask_text_input_formatter: ^2.7.0
+  webview_flutter: ^4.13.0
 
 dev_dependencies:
   flutter_test:
@@ -80,6 +81,7 @@ flutter:
     - lib/assets/images/tire.png
     - lib/assets/images/logo.png
     - lib/assets/images/logoorcamentos.svg
+    - lib/assets/powerbi.html
 
   #   - images/a_dot_ham.jpeg
 

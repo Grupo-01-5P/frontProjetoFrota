@@ -4,9 +4,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class BudgetApprovalService {
   // Ajuste esta URL base para o endpoint de orçamentos da sua API
-  // Exemplo: Se o endpoint para atualizar um orçamento é 'https://suaapi.com/api/orcamentos/{id}'
-  // A URL base seria 'https://suaapi.com/api/orcamentos'
-  final String _baseUrl = 'http://localhost:4040/orcamento'; // AJUSTE ESTA URL
+  // Exemplo: Se o endpoint para atualizar um orçamento é 'https://suaapi.com/api/api/budgets/{id}'
+  // A URL base seria 'https://suaapi.com/api/api/budgets'
+  final String _baseUrl = 'http://localhost:4040/api/budgets'; // AJUSTE ESTA URL
 
   Future<void> approveBudget(int budgetId) async {
     final _secureStorage = const FlutterSecureStorage();

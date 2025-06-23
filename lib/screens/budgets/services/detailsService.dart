@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class BudgetDetailsService {
-  final String _baseUrl = 'http://localhost:4040/orcamento'; 
+  final String _baseUrl = 'http://localhost:4040/api/budgets'; 
 
   Future<Map<String, dynamic>> fetchBudgetDetails(int budgetId) async {
     final _secureStorage = const FlutterSecureStorage();
@@ -38,7 +38,7 @@ class BudgetDetailsService {
     }
   }
 
-  final String _orcamentoProdutosBaseUrl = 'http://localhost:4040/orcamento';
+  final String _orcamentoProdutosBaseUrl = 'http://localhost:4040/api/budgets';
 
   Future<void> removeProductFromBudget(int budgetId, int productId) async {
     final _secureStorage = const FlutterSecureStorage();

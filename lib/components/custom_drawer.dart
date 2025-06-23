@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:front_projeto_flutter/screens/dashboard.dart';
 import 'package:front_projeto_flutter/screens/home_page.dart';
-import 'package:front_projeto_flutter/screens/inoperatives/inoperative.dart';
 import 'package:front_projeto_flutter/screens/login_page.dart';
 import 'package:front_projeto_flutter/screens/maintenences/firstPage.dart';
 // Corrigido: Import específico para a tela de manutenção do supervisor
@@ -206,36 +206,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
               ),
           const SizedBox(height: 8),
 
-          // Veículos inoperantes - Apenas para Analista
-          if (isAnalista)
-            widget.useCustomIcons
-                ? _buildDrawerItemWithImage(
-                  imageAsset: 'lib/assets/images/iconInoperantes.png',
-                  text: 'Veículos inoperantes',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-
-                    // Navegação direta para a tela de inoperantes
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Inoperative()),
-                    );
-                  },
-                )
-                : _buildDrawerItemWithIcon(
-                  icon: Icons.warning,
-                  text: 'Veículos inoperantes',
-                  onTap: () {
-                    Navigator.pop(context); // Fechar o drawer
-
-                    // Navegação direta para a tela de inoperantes
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Inoperative()),
-                    );
-                  },
-                ),
-          if (isAnalista) const SizedBox(height: 8),
+          
 
           // Dashboards - Apenas para Analista
           if (isAnalista)
@@ -246,12 +217,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   onTap: () {
                     Navigator.pop(context); // Fechar o drawer
 
-                    // Navegação para a tela de dashboards
-                    // Quando implementada, substitua este código:
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em desenvolvimento'),
-                        duration: Duration(seconds: 2),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PowerBIPage(),
                       ),
                     );
                   },
@@ -262,12 +231,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   onTap: () {
                     Navigator.pop(context); // Fechar o drawer
 
-                    // Navegação para a tela de dashboards
-                    // Quando implementada, substitua este código:
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em desenvolvimento'),
-                        duration: Duration(seconds: 2),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PowerBIPage(),
                       ),
                     );
                   },
@@ -345,7 +312,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
           if (isAnalista) const SizedBox(height: 8),
 
           // Veículos - Apenas para Analista
-          if (isAnalista)
             widget.useCustomIcons
                 ? _buildDrawerItemWithImage(
                   imageAsset: 'lib/assets/images/iconCar.png',
@@ -377,7 +343,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     );
                   },
                 ),
-          if (isAnalista) const SizedBox(height: 8),
 
           // Configurações/Usuários - Apenas para Analista
           if (isAnalista)
