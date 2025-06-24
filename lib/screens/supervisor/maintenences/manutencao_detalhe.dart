@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:front_projeto_flutter/screens/maintenences/ViewMaintenancePhases.dart';
 
 class ManutencaoDetailScreenSupervisor extends StatefulWidget {
   final dynamic manutencao;
@@ -146,6 +147,17 @@ class _ManutencaoDetailScreenSupervisorState
     }
   }
 
+  void _navegarParaFases() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ViewMaintenancePhases(
+          manutencaoId: widget.manutencao['id'],
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _motivoController.dispose();
@@ -196,6 +208,31 @@ class _ManutencaoDetailScreenSupervisorState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (widget.manutencao['status']?.toLowerCase() != 'reprovado' && 
+                    widget.manutencao['status']?.toLowerCase() != 'pendente')
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.all(16),
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.timeline, color: Colors.white),
+                      label: const Text(
+                        'Ver Fases da Manutenção',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF148553),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: _navegarParaFases,
+                    ),
+                  ),
                 // Mensagens de erro ou sucesso
                 if (_errorMessage != null)
                   Container(
@@ -565,6 +602,9 @@ class _ManutencaoDetailScreenSupervisorState
                           ),
                           Text(
                             'Email: ${_oficinasSelecionada['email'] ?? 'Não informado'}',
+                          ),
+                          Text(
+                            'Data para levar: ${_formatDate(widget.manutencao['dataEnviarMecanica']) ?? 'Não informado'} - ${DateFormat('HH:mm').format(DateTime.parse(widget.manutencao['dataSolicitacao']))}',
                           ),
                         ],
                       ),
