@@ -33,7 +33,7 @@ class _BudgetsReprovalState extends State<BudgetsReproval> {
     try {
       // O texto da descrição e o checkbox não são enviados para o backend por enquanto,
       // conforme especificado. Apenas o status é alterado para "reproved".
-      await _reprovalService.reproveBudget(widget.budgetId);
+      await _reprovalService.reproveBudget(widget.budgetId, _receiveNewBudget, _descriptionController.text);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
